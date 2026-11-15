@@ -1,0 +1,2176 @@
+<!DOCTYPE html>
+<!--
+  Warehouse Development Analyzer — standalone build
+  Open directly in a browser. No internet, no API key, no install.
+  Built 2026-11-15
+-->
+
+<html lang="en" data-theme="light">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Warehouse Development Analyzer</title>
+<style>
+:root{color-scheme:light;
+--surface-1:#fcfcfb;--surface-2:#fff;--page:#f4f4f1;--ink:#0b0b0b;--ink-2:#52514e;--muted:#898781;
+--grid:#e1e0d9;--axis:#c3c2b7;--ring:rgba(11,11,11,.10);
+--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--good:#0ca30c;--warn:#fab219;--crit:#d03b3b;
+--sea:#e8f0f7;--coast:#b9cbd9;
+--shadow:0 1px 2px rgba(11,11,11,.06),0 8px 24px rgba(11,11,11,.06);
+--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+:root[data-theme=dark]{color-scheme:dark;
+--surface-1:#1a1a19;--surface-2:#232321;--page:#0d0d0d;--ink:#f0efec;--ink-2:#c3c2b7;--muted:#898781;
+--grid:#2c2c2a;--axis:#383835;--ring:rgba(255,255,255,.10);
+--s1:#3987e5;--s2:#d95926;--s3:#199e70;--sea:#141d25;--coast:#2d3f4d;
+--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35)}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--page);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+button,select,input,textarea{font:inherit;color:inherit}
+h1,h2,h3{margin:0;font-weight:600}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+.topbar{display:flex;align-items:center;gap:12px;padding:9px 14px;background:var(--surface-1);border-bottom:1px solid var(--grid);flex:none}
+.brand h1{font-size:14.5px;letter-spacing:-.01em;white-space:nowrap}
+.brand span{font-size:11px;color:var(--muted)}
+.topbar .sp{flex:1}
+.chip{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--ring);color:var(--ink-2);background:var(--surface-2);white-space:nowrap}
+.chip.warn{color:#7a4a00;background:#fff6e2;border-color:#f3dca6}
+:root[data-theme=dark] .chip.warn{color:#fab219;background:#2a2208;border-color:#4a3b10}
+.iconbtn{border:1px solid var(--ring);background:var(--surface-2);border-radius:8px;padding:5px 9px;cursor:pointer;font-size:12px}
+.iconbtn:hover{border-color:var(--axis)}
+.body{flex:1;display:grid;grid-template-columns:292px minmax(0,1fr) 404px;min-height:0}
+.panel{background:var(--surface-1);overflow:auto;min-height:0}
+.panel.left{border-right:1px solid var(--grid)}.panel.right{border-left:1px solid var(--grid)}
+.stage{position:relative;min-width:0;background:var(--page);display:flex;flex-direction:column}
+.stagetabs{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--grid);background:var(--surface-1);flex:none}
+.stagetabs button{border:1px solid var(--ring);background:var(--surface-2);border-radius:7px;padding:5px 11px;cursor:pointer;font-size:12.5px;color:var(--ink-2)}
+.stagetabs button[aria-pressed=true]{background:var(--s1);color:#fff;border-color:transparent;font-weight:600}
+.stagebody{flex:1;position:relative;min-height:0}
+.group{border-bottom:1px solid var(--grid)}
+.group>summary{cursor:pointer;padding:10px 13px;font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);list-style:none;display:flex;align-items:center;gap:6px}
+.group>summary::-webkit-details-marker{display:none}
+.group>summary::before{content:"";width:5px;height:5px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(-45deg);transition:transform .15s}
+.group[open]>summary::before{transform:rotate(45deg)}
+.group .inner{padding:2px 13px 13px;display:flex;flex-direction:column;gap:11px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;color:var(--ink-2);display:flex;justify-content:space-between;gap:8px}
+.field label b{font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.hint{font-size:11px;color:var(--muted);line-height:1.35}
+input[type=range]{width:100%;accent-color:var(--s1);height:18px}
+select,input[type=text],input[type=number],textarea{width:100%;padding:6px 8px;border:1px solid var(--ring);border-radius:7px;background:var(--surface-2)}
+textarea{font-family:var(--mono);font-size:11px;min-height:90px}
+.seg{display:flex;border:1px solid var(--ring);border-radius:8px;overflow:hidden}
+.seg button{flex:1;border:0;background:var(--surface-2);padding:6px 4px;cursor:pointer;font-size:12px;color:var(--ink-2)}
+.seg button+button{border-left:1px solid var(--ring)}
+.seg button[aria-pressed=true]{background:var(--s1);color:#fff;font-weight:600}
+.btn{border:1px solid var(--ring);background:var(--surface-2);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12.5px;text-align:center}
+.btn:hover{border-color:var(--axis)}
+.btn.primary{background:var(--s1);color:#fff;border-color:transparent;font-weight:600}
+.btn.ghost{background:transparent}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.mapview{position:absolute;inset:0;overflow:hidden;cursor:grab;touch-action:none}
+.gl-pane{position:absolute;inset:0}
+.gl-pane canvas{outline:none}
+.mapview.gl-on .data-pane{pointer-events:none}
+.mapview.gl-on .data-pane .site{pointer-events:auto}
+.mapview.gl-on{cursor:default}
+.map-attrib{position:absolute;right:0;bottom:0;font-size:10px;color:var(--ink-2);
+  background:color-mix(in srgb,var(--surface-1) 86%,transparent);padding:2px 6px;
+  border-top-left-radius:6px;pointer-events:none;z-index:3}
+.data-pane{position:absolute;inset:0;width:100%;height:100%}
+.sea{fill:var(--sea)}.coast{fill:none;stroke:var(--coast);stroke-width:1.6}
+.grat{stroke:var(--grid);stroke-width:1;opacity:.7}
+.grat-lbl{fill:var(--muted);font-size:9px;opacity:.8}
+.corridor{stroke:var(--axis);fill:none}
+.corridor-t{stroke-width:3.2;stroke:var(--muted);opacity:.9}
+.corridor-a{stroke-width:1.4;stroke-dasharray:5 4}
+.route-lbl{fill:var(--muted);font-size:9.5px;font-weight:600;text-anchor:middle;letter-spacing:.04em;paint-order:stroke;stroke:var(--surface-1);stroke-width:3.5px;stroke-linejoin:round}
+.place{fill:var(--muted);font-size:10.5px;text-anchor:middle;pointer-events:none;paint-order:stroke;stroke:var(--surface-1);stroke-width:3px;stroke-linejoin:round}
+.place-city{font-size:12px;font-weight:600;fill:var(--ink-2);letter-spacing:.02em}
+.place-water{font-size:11px;font-style:italic}
+.flow{stroke:var(--s2);stroke-opacity:.5;stroke-linecap:round}
+.flow-heavy{stroke:var(--s2);stroke-opacity:.72}
+.flow-lbl{fill:var(--ink-2);font-size:10px;font-weight:600;paint-order:stroke;stroke:var(--surface-1);stroke-width:3px;stroke-linejoin:round}
+.site circle,.site path{fill:var(--surface-1);stroke:var(--s1);stroke-width:2}
+.site-base circle,.site-base path{stroke:var(--muted)}
+.site-on circle,.site-on path{fill:var(--s2);stroke:var(--surface-1);stroke-width:2.5}
+.site-lbl{font-size:11px;font-weight:600;text-anchor:middle;fill:var(--ink);paint-order:stroke;stroke:var(--surface-1);stroke-width:3.5px;stroke-linejoin:round}
+.scale{stroke:var(--ink-2);stroke-width:1.6}
+.scale-lbl{fill:var(--ink-2);font-size:10px;font-weight:600;text-anchor:middle;paint-order:stroke;stroke:var(--surface-1);stroke-width:3px}
+.mapctl{position:absolute;top:10px;left:10px;display:flex;flex-direction:column;gap:6px;z-index:4}
+.mapctl .btn{width:32px;height:28px;padding:0;font-size:14px;line-height:1;box-shadow:var(--shadow);background:var(--surface-1)}
+.legend{position:absolute;left:10px;bottom:10px;z-index:4;padding:8px 10px;border:1px solid var(--ring);border-radius:9px;font-size:11px;color:var(--ink-2);background:var(--surface-1);box-shadow:var(--shadow);max-width:230px;display:flex;flex-direction:column;gap:4px}
+.massing-wrap{position:absolute;inset:0;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.massing{width:100%;max-width:700px;height:auto}
+.m-parcel{fill:var(--grid);stroke:none}
+.m-apron{fill:var(--axis);opacity:.55}
+.m-hold{fill:var(--s2);opacity:.22}
+.m-roof{fill:var(--s1);opacity:.9}
+.m-wall-a{fill:var(--s1);opacity:.62}
+.m-wall-b{fill:var(--s1);opacity:.45}
+.m-door{fill:var(--surface-1);opacity:.75}
+.m-outline{fill:none;stroke:var(--ink-2);stroke-width:2;stroke-dasharray:7 5}
+.m-outline-bad{stroke:var(--crit);stroke-width:2.6;stroke-dasharray:none}
+.m-lbl{fill:var(--ink-2);font-size:12px;text-anchor:middle}
+.m-lbl-head{fill:var(--ink);font-size:14px;font-weight:600}
+.m-ok{fill:var(--good);font-weight:600}.m-bad{fill:var(--crit);font-weight:600}
+.tabs{display:flex;border-bottom:1px solid var(--grid);position:sticky;top:0;background:var(--surface-1);z-index:2}
+.tabs button{flex:1;border:0;background:transparent;padding:10px 4px;cursor:pointer;font-size:12.5px;color:var(--muted);border-bottom:2px solid transparent}
+.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--s1);font-weight:600}
+.pane{padding:13px;display:flex;flex-direction:column;gap:13px}.pane[hidden]{display:none}
+.verdict{border:1px solid var(--ring);border-radius:12px;overflow:hidden;background:var(--surface-2)}
+.verdict .head{padding:12px 13px;display:flex;flex-direction:column;gap:3px;border-left:4px solid var(--s1)}
+.verdict.no .head{border-left-color:var(--crit)}
+.verdict .kicker{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.verdict h2{font-size:18px;letter-spacing:-.015em}
+.verdict .sub{font-size:12px;color:var(--ink-2)}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--grid)}
+.kpi{background:var(--surface-1);padding:9px 11px}
+.kpi .k{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.kpi .v{font-size:16px;font-weight:600;margin-top:1px}
+.kpi .n{font-size:10.5px;color:var(--muted)}
+.kpi .v.pos{color:var(--good)}.kpi .v.neg{color:var(--crit)}
+.card{border:1px solid var(--ring);border-radius:11px;background:var(--surface-2)}
+.card>h3{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);padding:10px 12px 0}
+.card .cbody{padding:9px 12px 12px}
+.note{font-size:11.5px;color:var(--muted);line-height:1.45}
+.bars{display:flex;flex-direction:column;gap:7px}
+.bar{display:grid;grid-template-columns:92px 1fr 32px;align-items:center;gap:8px;font-size:12px}
+.bar .t{color:var(--ink-2)}
+.bar .track{height:9px;background:var(--grid);border-radius:0 3px 3px 0}
+.bar .fill{height:100%;border-radius:0 3px 3px 0;background:var(--s1)}
+.bar .n{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.bar.total .fill{background:var(--ink)}
+table.t{width:100%;border-collapse:collapse;font-size:12px}
+table.t th{text-align:left;font-weight:600;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;padding:0 0 5px}
+table.t td{padding:5px 0;border-top:1px solid var(--grid);font-variant-numeric:tabular-nums}
+table.t td.l{font-variant-numeric:normal;color:var(--ink-2)}
+table.t td.r,table.t th.r{text-align:right}
+table.t tr.sum td{border-top:1.5px solid var(--axis);font-weight:600}
+table.t tr.clickable{cursor:pointer}
+table.t tr.clickable:hover td{background:var(--page)}
+table.t tr.on td{background:color-mix(in srgb,var(--s1) 9%,transparent)}
+.flags{display:flex;flex-direction:column;gap:6px}
+.flag{display:flex;gap:7px;font-size:12px;color:var(--ink-2);line-height:1.4}
+.flag .ic{flex:none;width:15px;height:15px;border-radius:50%;margin-top:1px;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff;background:var(--warn)}
+.flag.stop .ic{background:var(--crit)}.flag.info .ic{background:var(--s1)}.flag.ok .ic{background:var(--good)}
+.method{padding:14px;font-size:13px;line-height:1.6;color:var(--ink-2);display:flex;flex-direction:column;gap:11px}
+.method h3{font-size:13px;color:var(--ink);margin-top:5px}
+.method .eq{font-family:var(--mono);font-size:11.5px;background:var(--page);border:1px solid var(--ring);border-radius:6px;padding:8px 10px;white-space:pre-wrap;color:var(--ink)}
+.method ul{margin:0;padding-left:17px}.method li{margin:3px 0}
+.method strong{color:var(--ink)}
+.empty{padding:30px 16px;text-align:center;color:var(--muted);font-size:13px;line-height:1.6}
+@media(max-width:1200px){.body{grid-template-columns:260px minmax(0,1fr) 350px}}
+@media(max-width:980px){.body{grid-template-columns:1fr;grid-template-rows:auto 60vh auto}
+.panel.left{order:2;border:0;border-top:1px solid var(--grid)}.stage{order:1}.panel.right{order:3;border:0;border-top:1px solid var(--grid)}}
+
+</style></head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><h1>Warehouse Development Analyzer</h1>
+      <span id="caseName">—</span></div>
+    <div class="sp"></div>
+    <span id="flash" class="chip" style="display:none"></span>
+    <button class="iconbtn" id="exportBtn">Export case</button>
+    <button class="iconbtn" id="themeBtn">Dark</button>
+  </header>
+  <div class="body">
+    <aside class="panel left"></aside>
+    <div class="stage">
+      <div class="stagetabs">
+        <button id="viewMap" aria-pressed="true">Network map</button>
+        <button id="viewMass" aria-pressed="false">Massing &amp; parcel</button>
+      </div>
+      <div class="stagebody">
+        <div id="map"></div>
+        <div class="mapctl"><button class="btn" id="zin">+</button><button class="btn" id="zout">−</button><button class="btn" id="zfit" title="Fit">⤢</button></div>
+        <div class="legend" id="legend"></div>
+        <div class="massing-wrap" id="massWrap" hidden></div>
+      </div>
+    </div>
+    <aside class="panel right">
+      <div class="tabs" role="tablist">
+        <button id="tabResult" role="tab" aria-selected="true">Result</button>
+        <button id="tabCompare" role="tab" aria-selected="false">Compare</button>
+        <button id="tabMethod" role="tab" aria-selected="false">Method</button>
+      </div>
+      <div class="pane" id="paneResult"></div>
+      <div class="pane" id="paneCompare" hidden></div>
+      <div class="method" id="paneMethod" hidden></div>
+    </aside>
+  </div>
+</div>
+<script>
+/* ---- data.js ---- */
+/* ============================================================
+   data.js — Warehouse Development Analyzer
+   Base case: JNE Bulkhub relocation (PSSD 2026 study).
+   Every figure here is an editable default, not a constant:
+   load another case and the same engines run on it.
+   ============================================================ */
+window.BASECASE = (function () {
+
+  /* ---- destination anchors (approximate city coordinates) ---- */
+  const anchors = {
+    CGK:   { n: "CGK / Soekarno–Hatta", lat: -6.1260, lng: 106.6560 },
+    MERAK: { n: "Merak (Sumatera gate)", lat: -5.9300, lng: 105.9950 },
+    BOO:   { n: "Bogor",      lat: -6.5950, lng: 106.8000 },
+    BKI:   { n: "Bekasi",     lat: -6.2380, lng: 106.9980 },
+    CKR:   { n: "Cikarang",   lat: -6.2650, lng: 107.1500 },
+    BDO:   { n: "Bandung",    lat: -6.9170, lng: 107.6190 },
+    SRG:   { n: "Semarang",   lat: -6.9670, lng: 110.4200 },
+    JOG:   { n: "Yogyakarta", lat: -7.7970, lng: 110.3700 },
+    SOC:   { n: "Solo",       lat: -7.5660, lng: 110.8280 },
+    SUB:   { n: "Surabaya",   lat: -7.2580, lng: 112.7520 }
+  };
+
+  /* ---- destination groups used by the flow table ---- */
+  const groups = {
+    CGK:  { n: "CGK", members: ["CGK"] },
+    WEST: { n: "Sumatera, TGR, CLG (via Merak)", members: ["MERAK"] },
+    BODE: { n: "BOO, BKI, CKR", members: ["BOO", "BKI", "CKR"] },
+    JAVA: { n: "Jawa + Indonesia Timur", members: ["BDO", "SRG", "JOG", "SOC", "SUB"] }
+  };
+
+  /* ---- measured leg times (minutes), from the study's route tables.
+     in  = destination -> hub.   out = hub -> destination.
+     These five sites are the calibration set for the estimator. ---- */
+  const L = function (i, o) { return { in: i, out: o }; };
+  const refSites = [
+    { id: "cikokol", n: "Cikokol (existing)", lat: -6.2185, lng: 106.6318, existing: true,
+      legs: { CGK: L(60, 61), MERAK: L(170, 140), BOO: L(100, 100), BKI: L(110, 110),
+              CKR: L(100, 130), BDO: L(220, 320), SRG: L(530, 620), JOG: L(730, 870),
+              SOC: L(700, 710), SUB: L(910, 930) } },
+    { id: "gabus", n: "Gabus", lat: -6.1770, lng: 107.0560,
+      legs: { CGK: L(69, 70), MERAK: L(240, 240), BOO: L(90, 110), BKI: L(25, 26),
+              CKR: L(28, 26), BDO: L(180, 240), SRG: L(540, 550), JOG: L(720, 710),
+              SOC: L(600, 660), SUB: L(850, 860) } },
+    { id: "jababeka", n: "Jababeka (Cikarang)", lat: -6.2750, lng: 107.1550,
+      legs: { CGK: L(81, 72), MERAK: L(260, 230), BOO: L(100, 110), BKI: L(60, 60),
+              CKR: L(25, 25), BDO: L(190, 250), SRG: L(490, 540), JOG: L(660, 730),
+              SOC: L(590, 620), SUB: L(840, 810) } },
+    { id: "klari", n: "Klari (Karawang)", lat: -6.3400, lng: 107.3600,
+      legs: { CGK: L(109, 104), MERAK: L(290, 270), BOO: L(160, 150), BKI: L(120, 120),
+              CKR: L(85, 80), BDO: L(160, 160), SRG: L(470, 480), JOG: L(640, 690),
+              SOC: L(570, 580), SUB: L(820, 800) } },
+    { id: "purwakarta", n: "Purwakarta", lat: -6.5560, lng: 107.4430,
+      legs: { CGK: L(130, 126), MERAK: L(310, 300), BOO: L(180, 160), BKI: L(170, 130),
+              CKR: L(130, 130), BDO: L(130, 130), SRG: L(510, 420), JOG: L(670, 660),
+              SOC: L(590, 590), SUB: L(830, 810) } }
+  ];
+
+  /* ---- flow table: daily tonnage on each hub-crossing movement ----
+     Each flow is one or two legs through the hub. Composite minutes
+     reconstruct the study's published route times exactly. */
+  const flows = [
+    { id: "pu_cgk",  n: "CGK → hub (pickup)",            kg: 211774, from: "CGK",  to: null },
+    { id: "sh_cgk",  n: "Hub → CGK (shuttle delivery)",  kg: 101938, from: null,   to: "CGK" },
+    { id: "w_bode",  n: "West → hub → BOO/BKI/CKR",      kg: 21214,  from: "WEST", to: "BODE" },
+    { id: "w_java",  n: "West → hub → Jawa/Indo Timur",  kg: 138631, from: "WEST", to: "JAVA" },
+    { id: "bode_w",  n: "BOO/BKI/CKR → hub → West",      kg: 46522,  from: "BODE", to: "WEST" },
+    { id: "java_w",  n: "Jawa/Indo Timur → hub → West",  kg: 80599,  from: "JAVA", to: "WEST" }
+  ];
+
+  /* ---- demand ---- */
+  const demand = {
+    unit: "kg",
+    dailyMean: 707959,        // kg/day, 15-month sample
+    dailyUCL: 1116223,
+    dailyLCL: 299696,
+    peakRatio: 0.55,          // share of the day arriving in the peak window
+    kgPerShipment: 14,
+    // derived from the study's control limits: LCL/mean and UCL/mean
+    season: { low: 42.33, normal: 100, high: 157.67 },
+    scenario: "high",          // the season the building is SIZED for
+    buildingOverrideSqm: null, // pin the building size if the brief fixes it
+    seasonMix: { low: 25, normal: 50, high: 25 },
+    growthPct: 6,
+    horizonYears: 10,
+    storageDays: 0.5          // how long goods dwell — this picks the facility type
+  };
+
+  /* ---- programme parameters (the sizing model) ---- */
+  const programme = {
+    kgPerSqm: 40,             // peak kg held per m² of net operating floor
+    circulationPct: 50,       // movement + circulation on top of net
+    supportPct: 30,           // support area as a share of the TOTAL building
+    clearHeightM: 12,
+    opHours: 20,
+    dockUtilPct: 60,          // practical dock occupancy
+    dockPitchM: 3.7,
+    apronDepthM: 35,
+    truckSlotSqm: 120,
+    yardCircPct: 25,          // internal roads, landscape, setbacks
+    unloadTrucksPerDay: 265,
+    unloadDwellMin: 76,
+    unloadQueueMin: 27,
+    loadTrucksPerDay: 130,
+    loadDwellMin: 180,
+    loadQueueMin: 80,
+    holdingFactor: 1.6,
+    minRoadWidthM: 8,         // below this, trucks cannot pass two-way
+    setbackM: 12              // fire access and boundary setback
+  };
+
+  /* ---- cost model, reverse-engineered from the CAPEX simulations ----
+     Every line below land+building is a percentage of their subtotal,
+     which reproduces the published totals exactly. */
+  const cost = {
+    buildingPerSqm: 4.5e6,
+    sitePrepPct: 3,           // per-candidate override
+    permitsPct: 2,
+    furniturePct: 1.5,
+    hvacPct: 1.5,
+    gensetPct: 2,
+    cctvPct: 2.5,
+    itPct: 2,
+    contingencyPct: 10,
+    acquisitionCostPct: 7,    // BPHTB, notary, legal — excluded from source
+    wacc: 13,
+    opexPerSqmYr: 420000,
+    tonsPerTruck: 5,
+    costPerTruckMinute: 5000,
+    overflowPerSqmYr: 1.8e6,  // cost of capacity the site cannot hold
+    otherBenefitYr: 0,
+    workingDays: 360
+  };
+
+  /* ---- candidates ---- */
+  const candidates = [
+    { id: "K1", n: "K1 – Cikarang (Cibarusah)", lat: -6.3745, lng: 107.0565,
+      landSqm: 55266, acquireSqm: 55000, pricePerSqm: 3.0e6, roadWidthM: 6,
+      tollKm: 9.5, tollMin: 20, sitePrepPct: 5, zoning: "non-estate",
+      legal: "SHM · 2 owners · 14 certificates", legalScore: 3, readiness: 2,
+      flags: ["Land sits 2–3 m below the road", "Nearly 10 km to Cikarang Barat toll",
+              "6 m road jams at peak"] },
+    { id: "K2", n: "K2 – Gabus Bekasi", lat: -6.1770, lng: 107.0560, refSite: "gabus",
+      landSqm: 45482, acquireSqm: 45000, pricePerSqm: 1.75e6, roadWidthM: 5.3,
+      tollKm: 2.0, tollMin: 8, sitePrepPct: 6, zoning: "non-estate",
+      legal: "SHM · 6 owners", legalScore: 2, readiness: 1,
+      flags: ["Active paddy — fill and compaction required", "5.3 m road, 5 m at the bridge",
+              "Asking price is 17× the 2024 NJOP of Rp 103,000/m²",
+              "Road widening to 6 m proposed but unscheduled"] },
+    { id: "K3", n: "K3 – Genesis Karawang", lat: -6.3190, lng: 107.2860,
+      landSqm: 77488, acquireSqm: 77000, pricePerSqm: 0.95e6, roadWidthM: 16,
+      tollKm: 11.5, tollMin: 22, sitePrepPct: 3, zoning: "estate",
+      legal: "HGB", legalScore: 4, readiness: 5,
+      flags: ["11.5 km to Karawang Barat toll"] },
+    { id: "K4", n: "K4 – Techno Park Karawang", lat: -6.3360, lng: 107.2520,
+      landSqm: 146426, acquireSqm: 70000, pricePerSqm: 2.75e6, roadWidthM: 15,
+      tollKm: 3.4, tollMin: 9, sitePrepPct: 3, zoning: "estate",
+      legal: "Industrial estate · IPL applies", legalScore: 4, readiness: 4,
+      flags: ["Scope unresolved: 146,426 m² surveyed vs 70,000 m² costed",
+              "Estate service charge (IPL) on top of land price"] },
+    { id: "K6", n: "K6 – Balaraja Barat", lat: -6.2100, lng: 106.4450,
+      landSqm: 55000, acquireSqm: 55000, pricePerSqm: 2.2e6, roadWidthM: 7.5,
+      tollKm: 2.7, tollMin: 9, sitePrepPct: 3, zoning: "non-estate",
+      legal: "Ownership verification required", legalScore: 4, readiness: 5,
+      flags: ["Legal ownership needs verification"] }
+  ];
+
+  /* ---- facility archetypes ---- */
+  const archetypes = {
+    bulkhub:  { n: "Bulk hub / cross-dock", storageDays: 0.5, dockIntensity: 1.0,
+                mechPerSqm: 0, kgPerSqmMult: 1.0, maxDailyKg: 2.5e6,
+                fit: "High throughput, same-day dwell, dock-bound" },
+    sorting:  { n: "Sorting hub", storageDays: 0.25, dockIntensity: 1.35,
+                mechPerSqm: 1.6e6, kgPerSqmMult: 1.15, maxDailyKg: 4e6,
+                fit: "Very high throughput, mechanised sortation" },
+    dc:       { n: "Distribution centre", storageDays: 7, dockIntensity: 0.45,
+                mechPerSqm: 0.5e6, kgPerSqmMult: 2.2, maxDailyKg: 1.5e6,
+                fit: "Inventory held, racked storage, fewer doors" },
+    satellite:{ n: "Satellite station", storageDays: 0.5, dockIntensity: 0.8,
+                mechPerSqm: 0, kgPerSqmMult: 0.9, maxDailyKg: 1.2e5,
+                fit: "Small footprint, van docks, local coverage" }
+  };
+
+  const weights = { network: 30, buildability: 20, cost: 25, readiness: 15, scalability: 10 };
+
+  return {
+    meta: { case: "JNE Bulkhub relocation", source: "PSSD 2026 feasibility study",
+            note: "Base case loaded from the uploaded study. Figures are the study's " +
+                  "own assumptions and surveys, not verified operational data." },
+    anchors: anchors, groups: groups, refSites: refSites, flows: flows,
+    demand: demand, programme: programme, cost: cost, candidates: candidates,
+    archetypes: archetypes, weights: weights,
+    archetype: "bulkhub",
+    baseline: { id: "cikokol", n: "Cikokol (existing)", lat: -6.2185, lng: 106.6318,
+                buildingSqm: 20843,
+                legs: refSites[0].legs }
+  };
+})();
+
+</script>
+<script>
+/* ---- engine.js ---- */
+/* ============================================================
+   engine.js — sizing, network load and feasibility
+   Three independent engines over one case object.
+   ============================================================ */
+window.ENGINE = (function () {
+  const R = 6371.0088, rad = Math.PI / 180;
+  function haversine(aLat, aLng, bLat, bLng) {
+    const dLat = (bLat - aLat) * rad, dLng = (bLng - aLng) * rad;
+    const s = Math.sin(dLat / 2) ** 2 +
+      Math.cos(aLat * rad) * Math.cos(bLat * rad) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+  }
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+
+  /* ================= NETWORK ================= */
+  /* Travel time is measured where the study measured it, and estimated
+     elsewhere from a model calibrated on those same measurements. */
+  let CAL = null;
+
+  function calibrate(C) {
+    const pts = [];
+    C.refSites.forEach(function (s) {
+      Object.keys(s.legs).forEach(function (k) {
+        const a = C.anchors[k];
+        if (!a) return;
+        const d = haversine(s.lat, s.lng, a.lat, a.lng);
+        pts.push({ d: d, m: s.legs[k].in });
+        pts.push({ d: d, m: s.legs[k].out });
+      });
+    });
+    // two regimes: short urban legs and long trunk legs behave differently
+    function fit(sub) {
+      const n = sub.length;
+      if (n < 2) return { a: 0, v: 40 };
+      let sx = 0, sy = 0, sxx = 0, sxy = 0;
+      sub.forEach(function (p) { sx += p.d; sy += p.m; sxx += p.d * p.d; sxy += p.d * p.m; });
+      const den = n * sxx - sx * sx;
+      const slope = den === 0 ? 1 : (n * sxy - sx * sy) / den;
+      const icpt = (sy - slope * sx) / n;
+      return { a: icpt, slope: slope, v: slope > 0 ? 60 / slope : 40 };
+    }
+    const cut = 120;
+    const near = fit(pts.filter(p => p.d <= cut));
+    const far = fit(pts.filter(p => p.d > cut));
+    let ss = 0, se = 0; const mean = pts.reduce((a, p) => a + p.m, 0) / pts.length;
+    pts.forEach(function (p) {
+      const f = p.d <= cut ? near : far;
+      const pred = f.a + f.slope * p.d;
+      se += (p.m - pred) ** 2; ss += (p.m - mean) ** 2;
+    });
+    CAL = { near: near, far: far, cut: cut, n: pts.length,
+            r2: ss > 0 ? 1 - se / ss : 0,
+            rmse: Math.sqrt(se / pts.length) };
+    return CAL;
+  }
+
+  /* Estimate a leg by local interpolation from the surveyed sites rather
+     than a global fit: take each reference site's own measured time to the
+     same anchor, correct it for the difference in distance, and weight by
+     proximity to that reference. A site sitting on a surveyed location
+     therefore returns its measured time. */
+  function estimateLeg(C, lat, lng, key, dir, excludeId) {
+    const a = C.anchors[key];
+    const dNew = haversine(lat, lng, a.lat, a.lng);
+    let acc = 0, wsum = 0;
+    C.refSites.forEach(function (r) {
+      if (excludeId && r.id === excludeId) return;
+      if (!r.legs[key]) return;
+      const dRef = haversine(r.lat, r.lng, a.lat, a.lng);
+      const v = ((dRef + dNew) / 2 <= CAL.cut ? CAL.near.v : CAL.far.v);
+      const est = r.legs[key][dir] + (dNew - dRef) / v * 60;
+      const sep = Math.max(0.4, haversine(lat, lng, r.lat, r.lng));
+      const w = 1 / (sep * sep);
+      acc += est * w; wsum += w;
+    });
+    if (!wsum) return Math.max(8, Math.round(CAL.near.a + CAL.near.slope * dNew));
+    return Math.max(8, Math.round(acc / wsum));
+  }
+
+  /* Leave-one-out check: estimate each surveyed site from the other four. */
+  function crossValidate(C) {
+    if (!CAL) calibrate(C);
+    const errs = [];
+    C.refSites.forEach(function (s) {
+      Object.keys(s.legs).forEach(function (k) {
+        ["in", "out"].forEach(function (dir) {
+          const est = estimateLeg(C, s.lat, s.lng, k, dir, s.id);
+          errs.push({ act: s.legs[k][dir], est: est, err: est - s.legs[k][dir] });
+        });
+      });
+    });
+    const n = errs.length;
+    const mae = errs.reduce((a, e) => a + Math.abs(e.err), 0) / n;
+    const mape = errs.reduce((a, e) => a + Math.abs(e.err) / Math.max(1, e.act), 0) / n * 100;
+    const rmse = Math.sqrt(errs.reduce((a, e) => a + e.err * e.err, 0) / n);
+    // the figure that matters: error on the ton-minute total
+    const loadErr = C.refSites.map(function (s) {
+      const actual = networkLoad(C, s).total;
+      const ghost = { lat: s.lat, lng: s.lng, _exclude: s.id };
+      const est = networkLoad(C, ghost).total;
+      return { id: s.id, actual: actual, est: est, pct: (est - actual) / actual * 100 };
+    });
+    return { n: n, mae: mae, mape: mape, rmse: rmse, loads: loadErr,
+             loadMape: loadErr.reduce((a, x) => a + Math.abs(x.pct), 0) / loadErr.length };
+  }
+
+  // minutes for one leg, measured when the site is a reference site
+  function legMin(C, site, key, dir) {
+    if (site.legs && site.legs[key]) return { m: site.legs[key][dir], measured: true };
+    if (site.refSite) {
+      const r = C.refSites.find(function (x) { return x.id === site.refSite; });
+      if (r && r.legs[key]) return { m: r.legs[key][dir], measured: true };
+    }
+    return { m: estimateLeg(C, site.lat, site.lng, key, dir, site._exclude), measured: false };
+  }
+  function groupMin(C, site, gkey, dir) {
+    const g = C.groups[gkey];
+    let sum = 0, measured = true;
+    g.members.forEach(function (k) {
+      const r = legMin(C, site, k, dir);
+      sum += r.m; if (!r.measured) measured = false;
+    });
+    return { m: sum / g.members.length, measured: measured };
+  }
+  function flowMin(C, site, flow) {
+    if (site.minuteOverride && site.minuteOverride[flow.id] > 0) {
+      return { m: site.minuteOverride[flow.id], measured: true, overridden: true };
+    }
+    let m = 0, measured = true;
+    if (flow.from) { const r = groupMin(C, site, flow.from, "in"); m += r.m; measured = measured && r.measured; }
+    if (flow.to)   { const r = groupMin(C, site, flow.to, "out"); m += r.m; measured = measured && r.measured; }
+    // the study truncates composite route minutes; match it exactly
+    return { m: Math.floor(m + 1e-9), measured: measured };
+  }
+
+  /* Distribution load: daily tonnage x travel minutes, the study's own
+     centre-of-gravity method. Lower is better. */
+  function networkLoad(C, site) {
+    if (!CAL) calibrate(C);
+    let total = 0, allMeasured = true;
+    const rows = C.flows.map(function (f) {
+      const r = flowMin(C, site, f);
+      const load = (f.kg / 1000) * r.m;
+      total += load; if (!r.measured) allMeasured = false;
+      return { flow: f, min: r.m, tons: f.kg / 1000, load: load, measured: r.measured };
+    });
+    // split the load into the trunk (site-insensitive) and the local legs
+    let local = 0, trunk = 0;
+    rows.forEach(function (r) {
+      const isTrunk = (r.flow.from === "WEST" && r.flow.to === "JAVA") ||
+                      (r.flow.from === "JAVA" && r.flow.to === "WEST");
+      if (isTrunk) trunk += r.load; else local += r.load;
+    });
+    return { total: total, rows: rows, measured: allMeasured, trunk: trunk, local: local };
+  }
+
+  /* ================= PROGRAMME ================= */
+  function sizing(C, archKey) {
+    const d = C.demand, p = C.programme;
+    const arch = C.archetypes[archKey || C.archetype];
+    const seasonMult = (d.season[d.scenario] || 100) / 100;
+    const dailyKg = d.dailyMean * seasonMult;
+    const peakKg = dailyKg * d.peakRatio;
+
+    const density = p.kgPerSqm * arch.kgPerSqmMult;
+    const netSqm = peakKg / density;
+    const opSqm = netSqm * (1 + p.circulationPct / 100);
+    let buildingSqm = opSqm / (1 - p.supportPct / 100);
+    if (d.buildingOverrideSqm) buildingSqm = d.buildingOverrideSqm;
+    const supportSqm = buildingSqm - opSqm;
+
+    const minuteCap = p.opHours * 60 * (p.dockUtilPct / 100);
+    const scale = seasonMult;
+    const unloadTrucks = p.unloadTrucksPerDay * scale;
+    const loadTrucks = p.loadTrucksPerDay * scale;
+    const unloadDocks = Math.ceil(unloadTrucks * p.unloadDwellMin / minuteCap * arch.dockIntensity);
+    const loadDocks = Math.ceil(loadTrucks * p.loadDwellMin / minuteCap * arch.dockIntensity);
+    const docks = unloadDocks + loadDocks;
+
+    const dockFaceM = docks * p.dockPitchM;
+    const apronSqm = dockFaceM * p.apronDepthM;
+
+    const queueConc = (unloadTrucks * p.unloadQueueMin + loadTrucks * p.loadQueueMin) /
+                      (p.opHours * 60);
+    const holdingSqm = queueConc * p.truckSlotSqm * p.holdingFactor;
+
+    const siteSqm = (buildingSqm + apronSqm + holdingSqm) * (1 + p.yardCircPct / 100);
+
+    const kgPerTruck = dailyKg / Math.max(1, unloadTrucks);
+    const capacityKg = unloadDocks * minuteCap / p.unloadDwellMin * kgPerTruck;
+
+    return { arch: arch, archKey: archKey || C.archetype, seasonMult: seasonMult,
+             dailyKg: dailyKg, peakKg: peakKg, shipments: dailyKg / d.kgPerShipment,
+             netSqm: netSqm, opSqm: opSqm, supportSqm: supportSqm, buildingSqm: buildingSqm,
+             unloadDocks: unloadDocks, loadDocks: loadDocks, docks: docks,
+             dockFaceM: dockFaceM, apronSqm: apronSqm, holdingSqm: holdingSqm,
+             queueTrucks: queueConc, siteSqm: siteSqm, capacityKg: capacityKg,
+             unloadTrucks: unloadTrucks, loadTrucks: loadTrucks };
+  }
+
+  /* area needed at each season, for the capacity-shortfall benefit */
+  function seasonSizes(C, archKey) {
+    const out = {};
+    const keep = C.demand.scenario;
+    ["low", "normal", "high"].forEach(function (s) {
+      C.demand.scenario = s;
+      out[s] = sizing(C, archKey).buildingSqm;
+    });
+    C.demand.scenario = keep;
+    return out;
+  }
+
+  /* ---- site layout: does the programme fit the parcel's SHAPE,
+     not just its area? Building takes the usable frontage, depth
+     follows from area, then apron both sides plus truck holding. ---- */
+  function siteLayout(C, cand, size) {
+    const p = C.programme;
+    const plot = cand.acquireSqm || cand.landSqm;
+    const aspect = cand.aspect || 1.25;
+    const parcelW = cand.frontageM || Math.sqrt(plot * aspect);
+    const parcelD = cand.depthM || plot / parcelW;
+    const sb = p.setbackM;
+
+    const usableW = Math.max(10, parcelW - 2 * sb);
+    // use the available frontage: a wider, shallower shed needs less depth
+    const buildW = Math.max(20, Math.min(usableW, 420));
+    const buildD = size.buildingSqm / buildW;
+    const holdD = size.holdingSqm / Math.max(1, parcelW);
+    const needD = buildD + 2 * p.apronDepthM + holdD + sb;
+    const usableD = parcelD;
+
+    return {
+      plot: plot, parcelW: parcelW, parcelD: parcelD,
+      buildW: buildW, buildD: buildD, holdD: holdD,
+      apron: p.apronDepthM, setback: sb,
+      needD: needD, usableD: usableD,
+      depthShort: Math.max(0, needD - usableD),
+      dockFacePerSide: size.dockFaceM / 2,
+      dockFaceOK: buildW >= size.dockFaceM / 2 - 0.5,
+      fitsShape: needD <= usableD && buildW >= size.dockFaceM / 2 - 0.5,
+      bx: (parcelW - buildW) / 2,
+      by: p.apronDepthM + sb / 2
+    };
+  }
+
+  /* ================= FEASIBILITY ================= */
+  function capex(C, cand, size) {
+    const c = C.cost;
+    const landSqm = cand.acquireSqm || cand.landSqm;
+    const land = landSqm * cand.pricePerSqm;
+    const building = size.buildingSqm * c.buildingPerSqm;
+    const mech = size.buildingSqm * (size.arch.mechPerSqm || 0);
+    const sub1 = land + building + mech;
+    const pcts = {
+      sitePrep: cand.sitePrepPct !== undefined ? cand.sitePrepPct : c.sitePrepPct,
+      permits: c.permitsPct, furniture: c.furniturePct, hvac: c.hvacPct,
+      genset: c.gensetPct, cctv: c.cctvPct, it: c.itPct
+    };
+    const lines = {};
+    let extras = 0;
+    Object.keys(pcts).forEach(function (k) {
+      lines[k] = sub1 * pcts[k] / 100; extras += lines[k];
+    });
+    const acquisition = land * c.acquisitionCostPct / 100;
+    const contingency = (sub1 + extras) * c.contingencyPct / 100;
+    return { land: land, landSqm: landSqm, building: building, mech: mech, sub1: sub1,
+             lines: lines, pcts: pcts, extras: extras, acquisition: acquisition,
+             contingency: contingency,
+             total: sub1 + extras + acquisition + contingency };
+  }
+
+  function annualDistribution(C, load) {
+    const c = C.cost;
+    const truckMin = load / c.tonsPerTruck;
+    return truckMin * c.costPerTruckMinute * c.workingDays;
+  }
+
+  function feasibility(C, cand, archKey) {
+    const size = sizing(C, archKey);
+    const load = networkLoad(C, cand);
+    const base = C.baseline ? networkLoad(C, C.baseline) : null;
+    const cx = capex(C, cand, size);
+    const c = C.cost;
+
+    // benefit 1 — distribution cost against the existing site
+    const distNew = annualDistribution(C, load.total);
+    const distBase = base ? annualDistribution(C, base.total) : distNew;
+    const distSaving = distBase - distNew;
+
+    // benefit 2 — capacity the existing site cannot hold, by season
+    const sizes = seasonSizes(C, archKey);
+    const existing = C.baseline ? (C.baseline.buildingSqm || 0) : 0;
+    let capSaving = 0;
+    const mix = C.demand.seasonMix;
+    ["low", "normal", "high"].forEach(function (s) {
+      const short = Math.max(0, sizes[s] - existing);
+      capSaving += short * c.overflowPerSqmYr * (mix[s] / 100);
+    });
+
+    const opexDelta = (size.buildingSqm - existing) * c.opexPerSqmYr;
+    const benefitY1 = distSaving + capSaving + (c.otherBenefitYr || 0);
+    const netY1 = benefitY1 - opexDelta;
+
+    const w = c.wacc / 100, g = C.demand.growthPct / 100, H = C.demand.horizonYears;
+    let npv = -cx.total;
+    for (let k = 1; k <= H; k++) npv += netY1 * Math.pow(1 + g, k - 1) / Math.pow(1 + w, k);
+    const resale = cx.land * Math.pow(1.05, H) / Math.pow(1 + w, H);
+    npv += resale;
+
+    let payback = null, cum = -cx.total;
+    for (let k = 1; k <= H; k++) {
+      const f = netY1 * Math.pow(1 + g, k - 1);
+      const prev = cum; cum += f;
+      if (payback === null && cum >= 0 && f > 0) payback = k - 1 + (-prev) / f;
+    }
+
+    // residual: the land price at which NPV reaches zero (NPV is linear in it)
+    function npvAt(price) {
+      const saved = cand.pricePerSqm; cand.pricePerSqm = price;
+      const x = capex(C, cand, size);
+      cand.pricePerSqm = saved;
+      let v = -x.total;
+      for (let k = 1; k <= H; k++) v += netY1 * Math.pow(1 + g, k - 1) / Math.pow(1 + w, k);
+      v += x.land * Math.pow(1.05, H) / Math.pow(1 + w, H);
+      return v;
+    }
+    const p0 = npvAt(0), p1 = npvAt(2e6);
+    const maxLand = (p0 > 0 && p1 !== p0) ? 2e6 * p0 / (p0 - p1) : null;
+
+    // The inverse question, always answerable: what would the project have
+    // to be worth each year to justify this capital?
+    let af = 0;
+    for (let k = 1; k <= H; k++) af += Math.pow(1 + g, k - 1) / Math.pow(1 + w, k);
+    const requiredBenefit = af > 0 ? (cx.total - resale) / af + opexDelta : null;
+    const benefitGap = requiredBenefit - benefitY1;
+
+    // buildability: area test and shape test must both pass
+    const plot = cand.acquireSqm || cand.landSqm;
+    const lay = siteLayout(C, cand, size);
+    const fitsArea = size.siteSqm <= plot;
+    const fits = fitsArea && lay.fitsShape;
+    const headroom = plot - size.siteSqm;
+    const roadOK = cand.roadWidthM >= C.programme.minRoadWidthM;
+    const frontageNeeded = size.dockFaceM;
+
+    return { cand: cand, size: size, load: load, baseLoad: base, capex: cx,
+             distSaving: distSaving, capSaving: capSaving, opexDelta: opexDelta,
+             benefitY1: benefitY1, netY1: netY1, npv: npv, payback: payback,
+             maxLand: maxLand, requiredBenefit: requiredBenefit, benefitGap: benefitGap,
+             fits: fits, fitsArea: fitsArea, layout: lay, headroom: headroom, roadOK: roadOK,
+             frontageNeeded: frontageNeeded, plot: plot, sizes: sizes };
+  }
+
+  /* ---- scores across the candidate set ---- */
+  function scoreAll(C, archKey) {
+    const res = C.candidates.map(function (k) { return feasibility(C, k, archKey); });
+    const loads = res.map(r => r.load.total);
+    const caps = res.map(r => r.capex.total);
+    const loMin = Math.min(...loads), loMax = Math.max(...loads);
+    const cpMin = Math.min(...caps), cpMax = Math.max(...caps);
+    const norm = (v, lo, hi) => hi === lo ? 100 : clamp(100 * (hi - v) / (hi - lo), 0, 100);
+
+    res.forEach(function (r) {
+      const k = r.cand;
+      const network = norm(r.load.total, loMin, loMax);
+      const cost = norm(r.capex.total, cpMin, cpMax);
+      const roadScore = clamp((k.roadWidthM - 4) / (16 - 4) * 100, 0, 100);
+      const fitScore = r.fits ? clamp(100 * r.headroom / r.plot * 2.2 + 55, 0, 100) : 0;
+      const tollScore = clamp(100 - (k.tollMin || 20) * 3.5, 0, 100);
+      const buildability = 0.4 * roadScore + 0.4 * fitScore + 0.2 * tollScore;
+      const readiness = ((k.readiness || 3) / 5 * 60) + ((k.legalScore || 3) / 5 * 40);
+      const spare = (k.landSqm - r.size.siteSqm) / Math.max(1, k.landSqm);
+      const scalability = clamp(spare * 180, 0, 100);
+      const W = C.weights, sum = W.network + W.buildability + W.cost + W.readiness + W.scalability;
+      r.scores = {
+        network: network, buildability: buildability, cost: cost,
+        readiness: readiness, scalability: scalability,
+        composite: (W.network * network + W.buildability * buildability + W.cost * cost +
+                    W.readiness * readiness + W.scalability * scalability) / sum
+      };
+      r.constraints = buildConstraints(C, r);
+    });
+    return res;
+  }
+
+  function buildConstraints(C, r) {
+    const out = [], k = r.cand, s = r.size;
+    if (!r.fitsArea) out.push({ level: "stop", t: "Programme does not fit: needs " +
+      Math.round(s.siteSqm).toLocaleString("en-US") + " m² of site, parcel offers " +
+      Math.round(r.plot).toLocaleString("en-US") + " m²" });
+    else if (!r.layout.fitsShape) out.push({ level: "stop", t: "Area is sufficient but the shape is not: " +
+      "needs " + Math.round(r.layout.needD) + " m of depth behind the frontage, parcel gives about " +
+      Math.round(r.layout.usableD) + " m" });
+    else if (r.headroom / r.plot < 0.12) out.push({ level: "warn",
+      t: "Only " + Math.round(r.headroom).toLocaleString("en-US") + " m² spare — no room to expand" });
+    if (!r.roadOK) out.push({ level: "stop", t: "Access road " + k.roadWidthM +
+      " m is below the " + C.programme.minRoadWidthM + " m needed for two-way truck movement" });
+    if ((k.tollMin || 0) > 15) out.push({ level: "warn",
+      t: (k.tollKm || "?") + " km / " + k.tollMin + " min to the nearest toll entrance" });
+    if (!r.load.measured) out.push({ level: "info",
+      t: "Travel times estimated, not measured — calibrated on the study's five surveyed sites" });
+    if (r.npv < 0) out.push({ level: "warn",
+      t: "Quantified benefits do not cover the capital at this land price" });
+    (k.flags || []).forEach(function (f) { out.push({ level: "warn", t: f }); });
+    return out;
+  }
+
+  /* Facility type follows the operating profile first — how long goods
+     dwell and at what volume — and only then cost. A distribution centre
+     is never the answer to a same-day cross-dock brief. */
+  function bestArchetype(C, cand) {
+    const need = C.demand.storageDays;
+    const out = Object.keys(C.archetypes).map(function (a) {
+      const arch = C.archetypes[a];
+      const f = feasibility(C, cand, a);
+      const dwellGap = Math.abs(arch.storageDays - need);
+      const overVolume = f.size.dailyKg > arch.maxDailyKg;
+      const eligible = dwellGap <= Math.max(0.5, need * 0.6) && !overVolume;
+      let why = "";
+      if (overVolume) why = "Volume exceeds what this type is built for";
+      else if (!eligible) why = "Holds " + arch.storageDays +
+        " days of stock; the brief needs " + need;
+      return { key: a, arch: arch, f: f, eligible: eligible, why: why,
+               dwellGap: dwellGap, overVolume: overVolume,
+               costPerTon: f.capex.total / Math.max(1, f.size.dailyKg / 1000) };
+    });
+    const elig = out.filter(x => x.eligible);
+    const pool = elig.length ? elig : out;
+    const fitting = pool.filter(x => x.f.fits);
+    const pick = (fitting.length ? fitting : pool).slice()
+      .sort(function (a, b) { return a.costPerTon - b.costPerTon; })[0];
+    return { all: out, best: pick, anyFit: fitting.length > 0, eligibleCount: elig.length };
+  }
+
+  return { haversine: haversine, calibrate: calibrate, calibration: () => CAL,
+           crossValidate: crossValidate,
+           networkLoad: networkLoad, sizing: sizing, seasonSizes: seasonSizes,
+           capex: capex, feasibility: feasibility, scoreAll: scoreAll, siteLayout: siteLayout,
+           bestArchetype: bestArchetype, annualDistribution: annualDistribution };
+})();
+
+</script>
+<script>
+/* ---- map.js ---- */
+/* ============================================================
+   map.js — self-drawn regional map. No tiles, no API key,
+   no network. Corridors, places and flows are data.
+   ============================================================ */
+window.REGION = {
+  corridors: [
+    { n: "Jakarta–Merak", cls: "t", pts: [[-6.170,106.800],[-6.220,106.630],[-6.210,106.440],[-6.120,106.150],[-5.930,106.000]] },
+    { n: "Jakarta–Cikampek", cls: "t", pts: [[-6.250,106.870],[-6.240,107.000],[-6.258,107.080],[-6.270,107.150],[-6.310,107.300],[-6.420,107.450]] },
+    { n: "Cipularang", cls: "t", pts: [[-6.420,107.450],[-6.556,107.443],[-6.840,107.480]] },
+    { n: "Jagorawi", cls: "t", pts: [[-6.250,106.870],[-6.480,106.840],[-6.590,106.800]] },
+    { n: "JORR", cls: "t", pts: [[-6.130,106.780],[-6.200,106.760],[-6.280,106.780],[-6.292,106.810],[-6.310,106.864],[-6.320,106.950],[-6.183,106.950],[-6.120,106.930]] },
+    { n: "Cibitung–Cilincing", cls: "t", pts: [[-6.258,107.080],[-6.180,107.060],[-6.120,106.930]] },
+    { n: "Airport toll", cls: "t", pts: [[-6.170,106.800],[-6.129,106.720],[-6.126,106.656]] },
+    { n: "", cls: "a", pts: [[-6.270,107.150],[-6.374,107.057]] },
+    { n: "", cls: "a", pts: [[-6.319,107.286],[-6.336,107.252],[-6.310,107.300]] }
+  ],
+  places: [
+    { n: "JAKARTA", lat: -6.175, lng: 106.825, kind: "city" },
+    { n: "TANGERANG", lat: -6.220, lng: 106.620, kind: "city" },
+    { n: "BEKASI", lat: -6.238, lng: 106.998, kind: "city" },
+    { n: "CIKARANG", lat: -6.265, lng: 107.150, kind: "city" },
+    { n: "KARAWANG", lat: -6.310, lng: 107.300, kind: "city" },
+    { n: "PURWAKARTA", lat: -6.556, lng: 107.443, kind: "city" },
+    { n: "BOGOR", lat: -6.595, lng: 106.800, kind: "city" },
+    { n: "DEPOK", lat: -6.400, lng: 106.823, kind: "city" },
+    { n: "SERANG", lat: -6.120, lng: 106.150, kind: "city" },
+    { n: "Balaraja", lat: -6.205, lng: 106.440, kind: "" },
+    { n: "Cibitung", lat: -6.258, lng: 107.080, kind: "" },
+    { n: "Cikampek", lat: -6.420, lng: 107.450, kind: "" },
+    { n: "Cibinong", lat: -6.480, lng: 106.843, kind: "" },
+    { n: "Soekarno–Hatta", lat: -6.126, lng: 106.656, kind: "" },
+    { n: "Merak", lat: -5.930, lng: 106.000, kind: "" },
+    { n: "Java Sea", lat: -5.880, lng: 106.600, kind: "water" }
+  ],
+  coast: [[-6.030,106.300],[-6.010,106.500],[-6.040,106.640],[-6.058,106.695],[-6.082,106.738],
+          [-6.097,106.782],[-6.105,106.822],[-6.100,106.862],[-6.094,106.902],[-6.078,106.940],
+          [-6.040,106.982],[-5.996,107.025],[-5.958,107.085],[-5.930,107.150]]
+};
+
+window.MapView = function (host, opts) {
+  const NS = "http://www.w3.org/2000/svg";
+  const st = { lat: -6.28, lng: 106.95, scale: 2600, w: 0, h: 0 };
+  host.classList.add("mapview");
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("class", "data-pane");
+  host.appendChild(svg);
+  const attrib = document.createElement("div");
+  attrib.className = "map-attrib";
+  host.appendChild(attrib);
+  const layers = {};
+  ["sea", "grid", "corr", "flow", "place", "site", "chrome"].forEach(function (k) {
+    layers[k] = document.createElementNS(NS, "g"); svg.appendChild(layers[k]);
+  });
+
+  /* ---------------- vector basemap (MapLibre + OpenFreeMap) ----------------
+     Optional. The overlay below is drawn in SVG either way; when a basemap is
+     live the SVG simply borrows MapLibre's camera so the two stay registered.
+     Everything degrades to the self-drawn schematic if tiles can't be reached. */
+  const STYLES = {
+    none:     { label: "Schematic — no internet needed", url: null, attr: "" },
+    liberty:  { label: "OpenFreeMap Liberty", attr: "© OpenStreetMap contributors · OpenFreeMap",
+                url: "https://tiles.openfreemap.org/styles/liberty" },
+    positron: { label: "OpenFreeMap Positron (muted)", attr: "© OpenStreetMap contributors · OpenFreeMap",
+                url: "https://tiles.openfreemap.org/styles/positron" },
+    bright:   { label: "OpenFreeMap Bright", attr: "© OpenStreetMap contributors · OpenFreeMap",
+                url: "https://tiles.openfreemap.org/styles/bright" },
+    osm:      { label: "OpenStreetMap standard", attr: "© OpenStreetMap contributors",
+                raster: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", maxzoom: 19,
+                note: "Served by OpenStreetMap's volunteer infrastructure. Fine for a tool " +
+                      "like this; it will refuse a page opened from a local file, and it is " +
+                      "not for bulk use." },
+    osmde:    { label: "OpenStreetMap Germany", attr: "© OpenStreetMap contributors",
+                raster: "https://tile.openstreetmap.de/{z}/{x}/{y}.png", maxzoom: 18 },
+    custom:   { label: "Custom tile URL…", attr: "", raster: null, maxzoom: 20,
+                note: "Any {z}/{x}/{y} raster template, including one that needs your own key." }
+  };
+  const CDNS = [
+    "https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js",
+    "https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js",
+    "https://cdn.jsdelivr.net/npm/maplibre-gl@4/dist/maplibre-gl.js"
+  ];
+  let gl = null, glReady = false, glDiv = null, styleKey = "none", muted = true, loading = false;
+
+  function rasterStyle(tmpl, attr, maxz) {
+    return {
+      version: 8,
+      sources: { base: { type: "raster", tiles: [tmpl], tileSize: 256,
+                         maxzoom: maxz || 19, attribution: attr } },
+      layers: [{ id: "base", type: "raster", source: "base" }]
+    };
+  }
+  /* A refused raster tile often comes back as a perfectly valid image, and a
+     sandbox that blocks images lets the style "load" over a blank canvas. So
+     test both: the image tells us whether anything can render at all, fetch
+     tells us the status code behind it. */
+  function probeRaster(tmpl, done) {
+    const z = Math.max(1, Math.min(16, Math.round(scaleToZoom(st.scale, st.lat))));
+    const n = Math.pow(2, z);
+    const x = Math.floor(((st.lng + 180) / 360) * n);
+    const sy = Math.sin(st.lat * Math.PI / 180);
+    const y = Math.floor((0.5 - Math.log((1 + sy) / (1 - sy)) / (4 * Math.PI)) * n);
+    const url = tmpl.replace(/{z}/g, z).replace(/{x}/g, x).replace(/{y}/g, y)
+                    .replace(/{s}/g, "a").replace(/{r}/g, "");
+    let img = null, fet, settled = false;
+    const finish = function (ok, why) { if (!settled) { settled = true; done(ok, why); } };
+    const evaluate = function () {
+      if (img === null) return;
+      if (img === false) return finish(false, "tiles");
+      if (fet === undefined) return;
+      if (fet && !fet.ok) {
+        return finish(false, fet.status === 403 ? "forbidden"
+                           : fet.status === 429 ? "ratelimited" : "tiles");
+      }
+      finish(true);
+    };
+    const im = new Image();
+    im.onload = function () { img = true; evaluate(); };
+    im.onerror = function () { img = false; evaluate(); };
+    im.src = url;
+    if (typeof fetch === "function") {
+      fetch(url, { mode: "cors", cache: "no-store" })
+        .then(function (r) { fet = { ok: r.ok, status: r.status }; evaluate(); })
+        .catch(function () { fet = null; evaluate(); });
+    } else { fet = null; }
+    setTimeout(function () {
+      if (img === null) img = false;
+      if (fet === undefined) fet = null;
+      evaluate();
+    }, 7000);
+  }
+
+  function loadLib(cb) {
+    if (window.maplibregl) return cb(true);
+    let i = 0;
+    (function next() {
+      if (i >= CDNS.length) return cb(false);
+      const sc = document.createElement("script");
+      sc.src = CDNS[i++];
+      sc.onload = function () { cb(!!window.maplibregl); };
+      sc.onerror = next;
+      document.head.appendChild(sc);
+    })();
+  }
+  // my scale is pixels per degree of latitude; MapLibre uses 512 px tiles
+  function scaleToZoom(sc, lat) {
+    return Math.log2(Math.max(1e-6, sc * Math.cos(lat * Math.PI / 180) * 512 / 360));
+  }
+  function zoomToScale(z, lat) {
+    return 512 * Math.pow(2, z) / 360 / Math.max(0.01, Math.cos(lat * Math.PI / 180));
+  }
+  function teardownGl() {
+    glReady = false;
+    if (gl) { try { gl.remove(); } catch (e) {} gl = null; }
+    if (glDiv) { glDiv.remove(); glDiv = null; }
+    host.classList.remove("gl-on");
+  }
+  function startGl(key, done) {
+    const st2 = STYLES[key];
+    teardownGl();
+    const tmpl = st2 && (key === "custom" ? api.customUrl : st2.raster);
+    if (!st2 || (!st2.url && !tmpl)) { styleKey = "none"; done(true, "schematic"); return; }
+    loading = true;
+    if (tmpl) {
+      probeRaster(tmpl, function (ok, why) {
+        if (!ok) { loading = false; styleKey = "none"; done(false, why || "tiles"); return; }
+        begin();
+      });
+    } else begin();
+
+    function begin() {
+    loadLib(function (ok) {
+      if (!ok) { loading = false; styleKey = "none"; done(false, "library"); return; }
+      glDiv = document.createElement("div");
+      glDiv.className = "gl-pane";
+      host.insertBefore(glDiv, host.firstChild);
+      let settled = false;
+      const fail = function (why) {
+        if (settled) return; settled = true; loading = false;
+        teardownGl(); styleKey = "none"; done(false, why);
+      };
+      try {
+        gl = new window.maplibregl.Map({
+          container: glDiv,
+          style: tmpl ? rasterStyle(tmpl, st2.attr, st2.maxzoom) : st2.url,
+          center: [st.lng, st.lat], zoom: scaleToZoom(st.scale, st.lat),
+          attributionControl: false, interactive: true, fadeDuration: 0
+        });
+      } catch (e) { return fail("init"); }
+      const timer = setTimeout(function () { fail("timeout"); }, 9000);
+      gl.on("error", function (e) {
+        const m = (e && e.error && e.error.message) || "";
+        if (/style|fetch|load|network|403|404/i.test(m) && !settled) {
+          clearTimeout(timer); fail("tiles");
+        }
+      });
+      gl.on("load", function () {
+        if (settled) return;
+        settled = true; clearTimeout(timer); loading = false;
+        glReady = true; styleKey = key;
+        host.classList.add("gl-on");
+        applyMute();
+        gl.on("move", syncFromGl);
+        syncFromGl();
+        done(true, "");
+      });
+    });
+    }
+  }
+  function applyMute() {
+    if (!glDiv) return;
+    glDiv.style.filter = muted ? "saturate(0.3) brightness(1.03) contrast(0.95)" : "";
+  }
+  function syncFromGl() {
+    if (!gl) return;
+    const c = gl.getCenter();
+    st.lat = c.lat; st.lng = c.lng;
+    st.scale = zoomToScale(gl.getZoom(), c.lat);
+    api.render();
+  }
+
+  function size() {
+    const r = host.getBoundingClientRect();
+    st.w = Math.max(1, Math.round(r.width)); st.h = Math.max(1, Math.round(r.height));
+    svg.setAttribute("viewBox", "0 0 " + st.w + " " + st.h);
+  }
+  const kx = function () { return st.scale * Math.cos(st.lat * Math.PI / 180); };
+  function P(lat, lng) {
+    if (glReady && gl) { const p = gl.project([lng, lat]); return { x: p.x, y: p.y }; }
+    return { x: st.w / 2 + (lng - st.lng) * kx(), y: st.h / 2 - (lat - st.lat) * st.scale };
+  }
+  function inv(x, y) {
+    if (glReady && gl) { const l = gl.unproject([x, y]); return { lat: l.lat, lng: l.lng }; }
+    return { lat: st.lat - (y - st.h / 2) / st.scale, lng: st.lng + (x - st.w / 2) / kx() };
+  }
+  function el(t, a) { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); return e; }
+  function clear(g) { while (g.firstChild) g.removeChild(g.firstChild); }
+
+  const api = {
+    state: st, project: P, invert: inv,
+    data: {}, onPick: opts && opts.onPick, onSite: opts && opts.onSite,
+    setView: function (lat, lng, sc) { st.lat = lat; st.lng = lng; if (sc) st.scale = sc; api.render(); },
+    resize: function () { size(); if (gl) { try { gl.resize(); } catch (e) {} } api.render(); },
+    zoomBy: function (f) {
+      if (glReady && gl) { gl.easeTo({ zoom: gl.getZoom() + (f > 1 ? 0.6 : -0.6), duration: 180 }); return; }
+      st.scale = Math.max(300, Math.min(40000, st.scale * f)); api.render();
+    },
+    basemaps: STYLES,
+    customUrl: "",
+    basemap: function () { return styleKey; },
+    muted: function () { return muted; },
+    setMuted: function (v) { muted = v; applyMute(); },
+    setBasemap: function (key, done) {
+      startGl(key, function (ok, why) {
+        if (api.onBasemap) api.onBasemap(ok, (STYLES[key] || {}).label || key, why, ok ? key : "none");
+        api.resize();
+      });
+    },
+    attribution: function () { return glReady ? STYLES[styleKey].attr : ""; },
+    fit: function (pts, pad) {
+      if (!pts.length) return;
+      size();
+      if (glReady && gl) {
+        const la = pts.map(p => p.lat), ln = pts.map(p => p.lng);
+        try {
+          gl.fitBounds([[Math.min(...ln), Math.min(...la)], [Math.max(...ln), Math.max(...la)]],
+            { padding: pad || 70, duration: 0 });
+        } catch (e) {}
+        return;
+      }
+      const la = pts.map(p => p.lat), ln = pts.map(p => p.lng);
+      const latC = (Math.min(...la) + Math.max(...la)) / 2;
+      const lngC = (Math.min(...ln) + Math.max(...ln)) / 2;
+      const dLat = Math.max(0.02, Math.max(...la) - Math.min(...la));
+      const dLng = Math.max(0.02, Math.max(...ln) - Math.min(...ln));
+      const p = pad || 70;
+      const sLat = (st.h - 2 * p) / dLat;
+      const sLng = (st.w - 2 * p) / (dLng * Math.cos(latC * Math.PI / 180));
+      st.lat = latC; st.lng = lngC; st.scale = Math.max(300, Math.min(sLat, sLng));
+      api.render();
+    },
+    render: function () {
+      if (!st.w) size();
+      Object.keys(layers).forEach(k => clear(layers[k]));
+      const d = api.data;
+
+      if (!glReady) {
+      const cp = window.REGION.coast.map(c => P(c[0], c[1]));
+      let path = "M" + cp.map(p => p.x + "," + p.y).join("L");
+      path += "L" + (cp[cp.length - 1].x + 5000) + "," + cp[cp.length - 1].y +
+              "L" + (cp[cp.length - 1].x + 5000) + ",-5000L" + (cp[0].x - 5000) + ",-5000" +
+              "L" + (cp[0].x - 5000) + "," + cp[0].y + "Z";
+      layers.sea.appendChild(el("path", { d: path, class: "sea" }));
+      layers.sea.appendChild(el("polyline", { points: cp.map(p => p.x + "," + p.y).join(" "), class: "coast" }));
+
+      const step = st.scale > 9000 ? 0.05 : st.scale > 4000 ? 0.1 : 0.25;
+      const a = inv(0, 0), b = inv(st.w, st.h);
+      for (let la = Math.floor(b.lat / step) * step; la <= a.lat + 1e-9; la += step) {
+        const p = P(la, a.lng);
+        layers.grid.appendChild(el("line", { x1: 0, y1: p.y, x2: st.w, y2: p.y, class: "grat" }));
+        const t = el("text", { x: 3, y: p.y - 3, class: "grat-lbl" }); t.textContent = la.toFixed(2) + "°";
+        layers.grid.appendChild(t);
+      }
+      for (let ln = Math.floor(a.lng / step) * step; ln <= b.lng + 1e-9; ln += step) {
+        const p = P(a.lat, ln);
+        layers.grid.appendChild(el("line", { x1: p.x, y1: 0, x2: p.x, y2: st.h, class: "grat" }));
+        const t = el("text", { x: p.x + 3, y: 11, class: "grat-lbl" }); t.textContent = ln.toFixed(2) + "°";
+        layers.grid.appendChild(t);
+      }
+
+      window.REGION.corridors.forEach(function (c) {
+        const pts = c.pts.map(p => P(p[0], p[1]));
+        layers.corr.appendChild(el("polyline", {
+          points: pts.map(p => p.x + "," + p.y).join(" "),
+          class: "corridor corridor-" + c.cls, fill: "none" }));
+        if (!c.n) return;
+        let best = null;
+        for (let i = 0; i < pts.length - 1; i++) {
+          const m = { x: (pts[i].x + pts[i + 1].x) / 2, y: (pts[i].y + pts[i + 1].y) / 2 };
+          if (m.x < 50 || m.y < 24 || m.x > st.w - 50 || m.y > st.h - 24) continue;
+          const L = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+          if (!best || L > best.L) {
+            let ang = Math.atan2(pts[i + 1].y - pts[i].y, pts[i + 1].x - pts[i].x) * 180 / Math.PI;
+            if (ang > 90) ang -= 180; if (ang < -90) ang += 180;
+            best = { L: L, x: m.x, y: m.y, ang: ang };
+          }
+        }
+        if (best && best.L > 60) {
+          const t = el("text", { x: best.x, y: best.y - 5, class: "route-lbl",
+            transform: "rotate(" + best.ang.toFixed(1) + " " + best.x + " " + best.y + ")" });
+          t.textContent = c.n; layers.corr.appendChild(t);
+        }
+      });
+      }
+
+      (d.flows || []).forEach(function (f) {
+        const o = P(f.from.lat, f.from.lng);
+        let t = P(f.to.lat, f.to.lng);
+        let clipped = false;
+        const m = 54;
+        if (t.x < m || t.x > st.w - m || t.y < m || t.y > st.h - m) {
+          const dx = t.x - o.x, dy = t.y - o.y;
+          let k = 1;
+          if (dx !== 0) k = Math.min(k, dx > 0 ? (st.w - m - o.x) / dx : (m - o.x) / dx);
+          if (dy !== 0) k = Math.min(k, dy > 0 ? (st.h - m - o.y) / dy : (m - o.y) / dy);
+          k = Math.max(0.05, k);
+          t = { x: o.x + dx * k, y: o.y + dy * k }; clipped = true;
+        }
+        layers.flow.appendChild(el("line", { x1: o.x, y1: o.y, x2: t.x, y2: t.y,
+          class: "flow" + (f.heavy ? " flow-heavy" : ""), "stroke-width": f.w }));
+        if (f.label) {
+          const lt = el("text", { x: t.x, y: t.y - 7, class: "flow-lbl",
+            "text-anchor": t.x > st.w - 110 ? "end" : t.x < 110 ? "start" : "middle" });
+          lt.textContent = f.label + (clipped ? " →" : "");
+          layers.flow.appendChild(lt);
+        }
+      });
+
+      if (!glReady) {
+        window.REGION.places.forEach(function (p) {
+          const q = P(p.lat, p.lng);
+          if (q.x < -60 || q.y < -20 || q.x > st.w + 60 || q.y > st.h + 20) return;
+          const t = el("text", { x: q.x, y: q.y, class: "place" + (p.kind ? " place-" + p.kind : "") });
+          t.textContent = p.n; layers.place.appendChild(t);
+        });
+      }
+
+      (d.sites || []).forEach(function (s) {
+        const q = P(s.lat, s.lng);
+        const g = el("g", { class: "site" + (s.active ? " site-on" : "") + (s.baseline ? " site-base" : "") });
+        if (s.baseline) {
+          g.appendChild(el("path", { d: "M" + q.x + "," + (q.y - 10) + "L" + (q.x + 10) + "," + q.y +
+            "L" + q.x + "," + (q.y + 10) + "L" + (q.x - 10) + "," + q.y + "Z" }));
+        } else {
+          g.appendChild(el("circle", { cx: q.x, cy: q.y, r: s.active ? 10 : 7 }));
+        }
+        const t = el("text", { x: q.x, y: q.y + (s.active ? 26 : 22), class: "site-lbl" });
+        t.textContent = s.label; g.appendChild(t);
+        g.style.cursor = "pointer";
+        g.addEventListener("click", function (e) { e.stopPropagation(); if (api.onSite) api.onSite(s.id); });
+        layers.site.appendChild(g);
+      });
+
+      const mpp = 111320 * Math.cos(st.lat * Math.PI / 180) / kx();
+      const want = [1, 2, 5, 10, 20, 50, 100];
+      let km = want[0];
+      for (const c of want) if (c * 1000 / mpp <= 150) km = c;
+      const px = km * 1000 / mpp, x0 = st.w - px - 16, y0 = st.h - 16;
+      layers.chrome.appendChild(el("line", { x1: x0, y1: y0, x2: x0 + px, y2: y0, class: "scale" }));
+      layers.chrome.appendChild(el("line", { x1: x0, y1: y0 - 4, x2: x0, y2: y0 + 4, class: "scale" }));
+      layers.chrome.appendChild(el("line", { x1: x0 + px, y1: y0 - 4, x2: x0 + px, y2: y0 + 4, class: "scale" }));
+      const lt = el("text", { x: x0 + px / 2, y: y0 - 7, class: "scale-lbl" });
+      lt.textContent = km + " km"; layers.chrome.appendChild(lt);
+      attrib.textContent = glReady ? STYLES[styleKey].attr : "";
+    }
+  };
+
+  let drag = null;
+  host.addEventListener("pointerdown", function (e) {
+    if (glReady) return;
+    if (e.button !== 0) return;
+    try { host.setPointerCapture(e.pointerId); } catch (x) {}
+    drag = { x: e.clientX, y: e.clientY, lat: st.lat, lng: st.lng, moved: 0 };
+  });
+  host.addEventListener("pointermove", function (e) {
+    if (glReady || !drag) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    drag.moved = Math.max(drag.moved, Math.abs(dx) + Math.abs(dy));
+    st.lng = drag.lng - dx / kx(); st.lat = drag.lat + dy / st.scale;
+    api.render();
+  });
+  host.addEventListener("pointerup", function (e) {
+    if (glReady) return;
+    const was = drag; drag = null;
+    try { host.releasePointerCapture(e.pointerId); } catch (x) {}
+    if (was && was.moved < 5 && api.onPick) {
+      const r = host.getBoundingClientRect();
+      const ll = inv(e.clientX - r.left, e.clientY - r.top);
+      api.onPick(ll.lat, ll.lng);
+    }
+  });
+  host.addEventListener("wheel", function (e) {
+    if (glReady) return;
+    e.preventDefault();
+    const r = host.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    const before = inv(mx, my);
+    st.scale = Math.max(300, Math.min(40000, st.scale * (e.deltaY < 0 ? 1.2 : 1 / 1.2)));
+    const after = inv(mx, my);
+    st.lat += before.lat - after.lat; st.lng += before.lng - after.lng;
+    api.render();
+  }, { passive: false });
+  window.addEventListener("resize", function () { api.resize(); });
+  size();
+  return api;
+};
+
+</script>
+<script>
+/* ---- massing.js ---- */
+/* ============================================================
+   massing.js — indicative isometric massing of the programme
+   on the parcel. Shows whether building + apron + truck
+   holding actually fit, instead of only reporting a number.
+   ============================================================ */
+window.MASSING = (function () {
+  const NS = "http://www.w3.org/2000/svg";
+  const C30 = Math.cos(Math.PI / 6), S30 = Math.sin(Math.PI / 6);
+
+  function draw(host, spec) {
+    while (host.firstChild) host.removeChild(host.firstChild);
+    const L = spec.layout;
+    const W = 680, H = 420;
+    const span = Math.max(L.parcelW, L.parcelD, L.needD) * 1.18;
+    const k = Math.min((W - 90) / (span * 2 * C30), (H - 130) / (span * 2 * S30 + 70));
+    const ox = W / 2, oy = 108;
+
+    function pt(x, y, z) {
+      return { x: ox + (x - y) * C30 * k, y: oy + (x + y) * S30 * k - (z || 0) * k * 1.9 };
+    }
+    const poly = function (pts, cls, extra) {
+      const e = document.createElementNS(NS, "polygon");
+      e.setAttribute("points", pts.map(p => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" "));
+      e.setAttribute("class", cls);
+      if (extra) for (const a in extra) e.setAttribute(a, extra[a]);
+      return e;
+    };
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.setAttribute("class", "massing");
+    svg.setAttribute("role", "img");
+    const ttl = document.createElementNS(NS, "title");
+    ttl.textContent = "Indicative massing of the facility on the parcel";
+    svg.appendChild(ttl);
+
+    const cx = L.parcelW / 2 - 0, cy = L.parcelD / 2;
+    const S = function (x, y, z) { return pt(x - cx, y - cy, z); };
+
+    // parcel slab
+    svg.appendChild(poly([S(0, 0), S(L.parcelW, 0), S(L.parcelW, L.parcelD), S(0, L.parcelD)],
+      "m-parcel"));
+
+    // truck holding strip
+    if (L.holdD > 0) {
+      const hy = L.by + L.buildD + L.apron;
+      svg.appendChild(poly([S(0, hy), S(L.parcelW, hy), S(L.parcelW, hy + L.holdD), S(0, hy + L.holdD)],
+        "m-hold"));
+    }
+    // dock aprons
+    [[L.by - L.apron, L.apron], [L.by + L.buildD, L.apron]].forEach(function (a) {
+      svg.appendChild(poly([S(L.bx, a[0]), S(L.bx + L.buildW, a[0]),
+                            S(L.bx + L.buildW, a[0] + a[1]), S(L.bx, a[0] + a[1])], "m-apron"));
+    });
+
+    // building box
+    const h = spec.clearHeightM || 12;
+    const x0 = L.bx, x1 = L.bx + L.buildW, y0 = L.by, y1 = L.by + L.buildD;
+    svg.appendChild(poly([S(x0, y1, 0), S(x1, y1, 0), S(x1, y1, h), S(x0, y1, h)], "m-wall-a"));
+    svg.appendChild(poly([S(x1, y0, 0), S(x1, y1, 0), S(x1, y1, h), S(x1, y0, h)], "m-wall-b"));
+    svg.appendChild(poly([S(x0, y0, h), S(x1, y0, h), S(x1, y1, h), S(x0, y1, h)], "m-roof"));
+
+    // dock doors along the near face
+    const doors = Math.min(40, Math.max(1, Math.round(spec.docks / 2)));
+    for (let i = 0; i < doors; i++) {
+      const dx = x0 + (i + 0.5) * (L.buildW / doors);
+      const w = Math.max(0.6, L.buildW / doors * 0.55);
+      svg.appendChild(poly([S(dx - w / 2, y1, 0), S(dx + w / 2, y1, 0),
+                            S(dx + w / 2, y1, h * 0.33), S(dx - w / 2, y1, h * 0.33)], "m-door"));
+    }
+
+    // parcel outline on top, so overflow is obvious
+    const outline = document.createElementNS(NS, "polygon");
+    outline.setAttribute("points",
+      [S(0, 0), S(L.parcelW, 0), S(L.parcelW, L.parcelD), S(0, L.parcelD)]
+        .map(p => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" "));
+    outline.setAttribute("class", "m-outline" + (spec.fits ? "" : " m-outline-bad"));
+    svg.appendChild(outline);
+
+    function label(x, y, text, cls) {
+      const t = document.createElementNS(NS, "text");
+      t.setAttribute("x", x); t.setAttribute("y", y);
+      t.setAttribute("class", cls || "m-lbl"); t.textContent = text;
+      svg.appendChild(t);
+    }
+    const topP = S(L.parcelW, 0);
+    label(W / 2, 22, Math.round(L.parcelW) + " m × " + Math.round(L.parcelD) + " m parcel", "m-lbl m-lbl-head");
+    label(W / 2, 40, Math.round(spec.buildingSqm).toLocaleString("en-US") + " m² building · " +
+      spec.docks + " docks · " + Math.round(spec.apronDepthM) + " m apron", "m-lbl");
+    label(W / 2, H - 14, spec.fits
+      ? "Programme fits with " + Math.round(spec.headroom).toLocaleString("en-US") + " m² to spare"
+      : "Programme exceeds the parcel by " + Math.round(-spec.headroom).toLocaleString("en-US") + " m²",
+      "m-lbl " + (spec.fits ? "m-ok" : "m-bad"));
+    host.appendChild(svg);
+    return L;
+  }
+  return { draw: draw };
+})();
+
+</script>
+<script>
+/* ---- app.js ---- */
+/* ============================================================
+   app.js — Warehouse Development Analyzer interface
+   ============================================================ */
+(function () {
+  const E = window.ENGINE;
+  const $ = (s, r) => (r || document).querySelector(s);
+  let C = JSON.parse(JSON.stringify(window.BASECASE));
+  const PRISTINE = JSON.parse(JSON.stringify(window.BASECASE));
+  let map, results = [], selId = null, view = "map", archMode = "auto", archFixed = "bulkhub";
+
+  const n0 = v => Math.round(v).toLocaleString("en-US");
+  const n1 = v => (Math.round(v * 10) / 10).toLocaleString("en-US");
+  function idr(v) {
+    const a = Math.abs(v), s = v < 0 ? "−" : "";
+    if (a >= 1e12) return s + "Rp " + n1(a / 1e12) + " tn";
+    if (a >= 1e9) return s + "Rp " + n1(a / 1e9) + " bn";
+    if (a >= 1e6) return s + "Rp " + n0(a / 1e6) + " m";
+    return s + "Rp " + n0(a);
+  }
+  const pct = (v, d) => (v * 100).toFixed(d === undefined ? 0 : d) + "%";
+  const div = c => { const e = document.createElement("div"); if (c) e.className = c; return e; };
+  const txt = (el, t) => { el.textContent = t; return el; };
+  function btn(t, cls, fn, title) {
+    const b = document.createElement("button");
+    b.className = cls || "btn"; b.textContent = t; b.onclick = fn;
+    if (title) b.title = title; return b;
+  }
+  function flash(msg, bad) {
+    const el = $("#flash");
+    el.textContent = msg; el.className = "chip" + (bad ? " warn" : "");
+    el.style.display = "inline-block";
+    clearTimeout(flash._t); flash._t = setTimeout(() => { el.style.display = "none"; }, 4200);
+  }
+
+  /* ---------- control primitives ---------- */
+  function group(title, open, fill) {
+    const d = document.createElement("details"); d.className = "group"; d.open = !!open;
+    const s = document.createElement("summary"); s.textContent = title; d.appendChild(s);
+    const b = div("inner"); fill(b); d.appendChild(b); return d;
+  }
+  function rangeField(label, value, min, max, step, fmt, fn, hint) {
+    const f = div("field"), l = document.createElement("label");
+    const sp = document.createElement("span"); sp.textContent = label;
+    const bb = document.createElement("b"); bb.textContent = fmt(value);
+    l.appendChild(sp); l.appendChild(bb); f.appendChild(l);
+    const i = document.createElement("input");
+    i.type = "range"; i.min = min; i.max = max; i.step = step; i.value = value;
+    i.oninput = () => { bb.textContent = fmt(+i.value); };
+    i.onchange = () => fn(+i.value);
+    f.appendChild(i);
+    if (hint) f.appendChild(txt(div("hint"), hint));
+    return f;
+  }
+  function numField(label, value, unit, fn, step) {
+    const f = div("field"), l = document.createElement("label");
+    const sp = document.createElement("span"); sp.textContent = label;
+    const b = document.createElement("b"); b.textContent = unit || "";
+    l.appendChild(sp); l.appendChild(b); f.appendChild(l);
+    const i = document.createElement("input");
+    i.type = "number"; i.value = value; if (step) i.step = step;
+    i.onchange = () => fn(+i.value);
+    f.appendChild(i); return f;
+  }
+  function textField(label, value, fn) {
+    const f = div("field");
+    f.appendChild(txt(document.createElement("label"), label));
+    const i = document.createElement("input");
+    i.type = "text"; i.value = value; i.onchange = () => fn(i.value);
+    f.appendChild(i); return f;
+  }
+  function seg(items, value, fn) {
+    const s = div("seg");
+    items.forEach(it => {
+      const b = document.createElement("button");
+      b.textContent = it[1]; b.setAttribute("aria-pressed", String(it[0] === value));
+      b.onclick = () => {
+        Array.from(s.children).forEach(c => c.setAttribute("aria-pressed", "false"));
+        b.setAttribute("aria-pressed", "true"); fn(it[0]);
+      };
+      s.appendChild(b);
+    });
+    return s;
+  }
+  function selectField(label, opts, value, fn) {
+    const f = div("field");
+    f.appendChild(txt(document.createElement("label"), label));
+    const s = document.createElement("select");
+    opts.forEach(o => {
+      const e = document.createElement("option");
+      e.value = o[0]; e.textContent = o[1]; if (o[0] === value) e.selected = true;
+      s.appendChild(e);
+    });
+    s.onchange = () => fn(s.value);
+    f.appendChild(s); return f;
+  }
+
+  /* ---------- left panel ---------- */
+  function buildControls() {
+    const host = $(".panel.left"); host.innerHTML = "";
+
+    host.appendChild(group("Case", true, b => {
+      b.appendChild(textField("Case name", C.meta.case, v => { C.meta.case = v; $("#caseName").textContent = v; }));
+      const r = div("row");
+      r.appendChild(btn("Import JSON", "btn", importCase));
+      r.appendChild(btn("Reset to base", "btn ghost", () => {
+        C = JSON.parse(JSON.stringify(PRISTINE)); selId = C.candidates[0].id;
+        buildControls(); recompute(); flash("Base case restored");
+      }));
+      b.appendChild(r);
+      b.appendChild(txt(div("hint"), C.meta.note));
+    }));
+
+    host.appendChild(group("Candidates", true, b => {
+      b.appendChild(selectField("Active candidate",
+        C.candidates.map(k => [k.id, k.n]), selId, v => { selId = v; buildControls(); recompute(); }));
+      const k = cand();
+      if (k) {
+        b.appendChild(textField("Name", k.n, v => { k.n = v; recompute(); }));
+        const g1 = div("row");
+        g1.appendChild(numField("Latitude", k.lat, "°", v => { k.lat = v; recompute(); }, "0.0001"));
+        g1.appendChild(numField("Longitude", k.lng, "°", v => { k.lng = v; recompute(); }, "0.0001"));
+        b.appendChild(g1);
+        b.appendChild(numField("Parcel area", k.landSqm, "m²", v => { k.landSqm = v; recompute(); }));
+        b.appendChild(numField("Area acquired", k.acquireSqm, "m²", v => { k.acquireSqm = v; recompute(); }));
+        b.appendChild(numField("Land price", k.pricePerSqm, "Rp/m²", v => { k.pricePerSqm = v; recompute(); }, "50000"));
+        const g2 = div("row");
+        g2.appendChild(numField("Frontage", Math.round(k.frontageM || 0), "m", v => { k.frontageM = v || null; recompute(); }));
+        g2.appendChild(numField("Depth", Math.round(k.depthM || 0), "m", v => { k.depthM = v || null; recompute(); }));
+        b.appendChild(g2);
+        b.appendChild(txt(div("hint"), "Leave frontage and depth at 0 to derive a rectangle from the area."));
+        const g3 = div("row");
+        g3.appendChild(numField("Road width", k.roadWidthM, "m", v => { k.roadWidthM = v; recompute(); }, "0.1"));
+        g3.appendChild(numField("To toll", k.tollMin, "min", v => { k.tollMin = v; recompute(); }));
+        b.appendChild(g3);
+        b.appendChild(numField("Site preparation", k.sitePrepPct, "% of land+building",
+          v => { k.sitePrepPct = v; recompute(); }, "0.5"));
+        const g4 = div("row");
+        g4.appendChild(numField("Readiness 1–5", k.readiness, "", v => { k.readiness = v; recompute(); }));
+        g4.appendChild(numField("Legal 1–5", k.legalScore, "", v => { k.legalScore = v; recompute(); }));
+        b.appendChild(g4);
+        const r = div("row");
+        r.appendChild(btn("Add candidate", "btn", addCandidate));
+        r.appendChild(btn("Remove", "btn ghost", removeCandidate));
+        b.appendChild(r);
+      }
+    }));
+
+    host.appendChild(group("Demand", false, b => {
+      b.appendChild(numField("Daily volume (mean)", C.demand.dailyMean, "kg/day",
+        v => { C.demand.dailyMean = v; recompute(); }, "1000"));
+      b.appendChild(rangeField("Peak-window share", C.demand.peakRatio, 0.2, 1, 0.01,
+        v => pct(v), v => { C.demand.peakRatio = v; recompute(); },
+        "Share of the day's volume that has to be on the floor at once."));
+      b.appendChild(selectField("Design season",
+        [["low", "Low — " + C.demand.season.low.toFixed(0) + "%"],
+         ["normal", "Normal — 100%"], ["high", "High — " + C.demand.season.high.toFixed(0) + "%"]],
+        C.demand.scenario, v => { C.demand.scenario = v; recompute(); }));
+      b.appendChild(rangeField("High season", C.demand.season.high, 100, 250, 1,
+        v => v.toFixed(0) + "%", v => { C.demand.season.high = v; recompute(); }));
+      b.appendChild(rangeField("Dwell time", C.demand.storageDays, 0, 21, 0.25,
+        v => v + " days", v => { C.demand.storageDays = v; recompute(); },
+        "How long goods sit. This is what selects the facility type."));
+      b.appendChild(rangeField("Volume growth", C.demand.growthPct, 0, 20, 0.5,
+        v => v.toFixed(1) + "%/yr", v => { C.demand.growthPct = v; recompute(); }));
+      b.appendChild(numField("Kg per shipment", C.demand.kgPerShipment, "kg",
+        v => { C.demand.kgPerShipment = v; recompute(); }, "0.5"));
+      b.appendChild(numField("Building size override", C.demand.buildingOverrideSqm || 0, "m², 0 = computed",
+        v => { C.demand.buildingOverrideSqm = v || null; recompute(); }));
+    }));
+
+    host.appendChild(group("Facility type", false, b => {
+      b.appendChild(seg([["auto", "Best fit"], ["fixed", "Choose"]], archMode, v => { archMode = v; buildControls(); recompute(); }));
+      if (archMode === "fixed") {
+        b.appendChild(selectField("Type",
+          Object.keys(C.archetypes).map(k => [k, C.archetypes[k].n]), archFixed,
+          v => { archFixed = v; recompute(); }));
+      } else {
+        b.appendChild(txt(div("hint"),
+          "Types are filtered by dwell time and volume first, then ranked on capital per tonne handled."));
+      }
+    }));
+
+    host.appendChild(group("Programme", false, b => {
+      const p = C.programme;
+      b.appendChild(rangeField("Storage density", p.kgPerSqm, 10, 200, 5,
+        v => n0(v) + " kg/m²", v => { p.kgPerSqm = v; recompute(); },
+        "Peak kilograms held per m² of net operating floor."));
+      b.appendChild(rangeField("Circulation", p.circulationPct, 0, 120, 5,
+        v => v + "%", v => { p.circulationPct = v; recompute(); }));
+      b.appendChild(rangeField("Support area", p.supportPct, 0, 50, 1,
+        v => v + "% of building", v => { p.supportPct = v; recompute(); }));
+      b.appendChild(rangeField("Operating window", p.opHours, 8, 24, 1,
+        v => v + " h/day", v => { p.opHours = v; recompute(); }));
+      b.appendChild(rangeField("Dock utilisation", p.dockUtilPct, 30, 95, 5,
+        v => v + "%", v => { p.dockUtilPct = v; recompute(); }));
+      b.appendChild(numField("Unloading trucks", p.unloadTrucksPerDay, "per day",
+        v => { p.unloadTrucksPerDay = v; recompute(); }));
+      b.appendChild(numField("Unload dwell", p.unloadDwellMin, "min",
+        v => { p.unloadDwellMin = v; recompute(); }));
+      b.appendChild(numField("Loading trucks", p.loadTrucksPerDay, "per day",
+        v => { p.loadTrucksPerDay = v; recompute(); }));
+      b.appendChild(numField("Load dwell", p.loadDwellMin, "min",
+        v => { p.loadDwellMin = v; recompute(); }));
+      b.appendChild(rangeField("Apron depth", p.apronDepthM, 18, 50, 1,
+        v => v + " m", v => { p.apronDepthM = v; recompute(); }));
+      b.appendChild(rangeField("Dock pitch", p.dockPitchM, 3, 6, 0.1,
+        v => v.toFixed(1) + " m", v => { p.dockPitchM = v; recompute(); }));
+      b.appendChild(rangeField("Yard circulation", p.yardCircPct, 0, 60, 5,
+        v => v + "%", v => { p.yardCircPct = v; recompute(); }));
+      b.appendChild(rangeField("Clear height", p.clearHeightM, 6, 24, 0.5,
+        v => v + " m", v => { p.clearHeightM = v; recompute(); }));
+    }));
+
+    host.appendChild(group("Cost & finance", false, b => {
+      const c = C.cost;
+      b.appendChild(numField("Building cost", c.buildingPerSqm, "Rp/m²",
+        v => { c.buildingPerSqm = v; recompute(); }, "100000"));
+      [["permitsPct", "Permits"], ["furniturePct", "Furniture"], ["hvacPct", "HVAC"],
+       ["gensetPct", "Genset"], ["cctvPct", "CCTV"], ["itPct", "IT"]].forEach(x => {
+        b.appendChild(rangeField(x[1], c[x[0]], 0, 8, 0.25,
+          v => v + "% of land+build", v => { c[x[0]] = v; recompute(); }));
+      });
+      b.appendChild(rangeField("Acquisition costs", c.acquisitionCostPct, 0, 15, 0.5,
+        v => v + "% of land", v => { c.acquisitionCostPct = v; recompute(); },
+        "BPHTB, notary and due diligence — excluded from the source simulations."));
+      b.appendChild(rangeField("Contingency", c.contingencyPct, 0, 30, 1,
+        v => v + "%", v => { c.contingencyPct = v; recompute(); }));
+      b.appendChild(rangeField("Discount rate", c.wacc, 5, 25, 0.5,
+        v => v.toFixed(1) + "%", v => { c.wacc = v; recompute(); }));
+      b.appendChild(numField("Operating cost", c.opexPerSqmYr, "Rp/m²/yr",
+        v => { c.opexPerSqmYr = v; recompute(); }, "10000"));
+      b.appendChild(numField("Cost of capacity shortfall", c.overflowPerSqmYr, "Rp/m²/yr",
+        v => { c.overflowPerSqmYr = v; recompute(); }, "100000"));
+      b.appendChild(numField("Truck cost", c.costPerTruckMinute, "Rp/min",
+        v => { c.costPerTruckMinute = v; recompute(); }, "250"));
+      b.appendChild(numField("Payload", c.tonsPerTruck, "tonnes",
+        v => { c.tonsPerTruck = v; recompute(); }, "0.5"));
+      b.appendChild(numField("Other annual benefit", c.otherBenefitYr, "Rp/yr",
+        v => { c.otherBenefitYr = v; recompute(); }, "1000000000"));
+    }));
+
+    host.appendChild(group("Flows & travel times", false, b => {
+      b.appendChild(txt(div("hint"),
+        "Daily tonnage on each movement through the hub. Minutes are measured where the " +
+        "study surveyed them and interpolated elsewhere — type over any value you have measured."));
+      const k = cand();
+      C.flows.forEach(f => {
+        const row = div("field");
+        const l = document.createElement("label");
+        l.appendChild(txt(document.createElement("span"), f.n));
+        row.appendChild(l);
+        const r = div("row");
+        const i1 = document.createElement("input");
+        i1.type = "number"; i1.value = f.kg; i1.step = "1000"; i1.title = "kg per day";
+        i1.onchange = () => { f.kg = +i1.value; recompute(); };
+        const i2 = document.createElement("input");
+        i2.type = "number"; i2.placeholder = "min";
+        i2.title = "travel minutes for the active candidate";
+        if (k && k.minuteOverride && k.minuteOverride[f.id]) i2.value = k.minuteOverride[f.id];
+        i2.onchange = () => {
+          if (!k) return;
+          k.minuteOverride = k.minuteOverride || {};
+          if (+i2.value > 0) k.minuteOverride[f.id] = +i2.value; else delete k.minuteOverride[f.id];
+          recompute();
+        };
+        r.appendChild(i1); r.appendChild(i2); row.appendChild(r);
+        b.appendChild(row);
+      });
+    }));
+
+    host.appendChild(group("Base map", true, b => {
+      const sel = document.createElement("select");
+      Object.keys(map.basemaps).forEach(k => {
+        const o = document.createElement("option");
+        o.value = k; o.textContent = map.basemaps[k].label;
+        if (k === map.basemap()) o.selected = true;
+        sel.appendChild(o);
+      });
+      sel.className = "bm-select";
+      sel.onchange = () => {
+        $(".bm-custom").style.display = sel.value === "custom" ? "" : "none";
+        if (sel.value === "custom" && !map.customUrl) {
+          $(".bm-status").textContent = "Paste a tile URL template below.";
+          return;
+        }
+        $(".bm-status").textContent = "Loading " + map.basemaps[sel.value].label + "…";
+        map.setBasemap(sel.value);
+      };
+      const f = div("field");
+      f.appendChild(txt(document.createElement("label"), "Style"));
+      f.appendChild(sel);
+      b.appendChild(f);
+      const w = document.createElement("label");
+      w.style.cssText = "font-size:12px;color:var(--ink-2);display:flex;align-items:center;gap:6px";
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.checked = map.muted();
+      cb.onchange = () => map.setMuted(cb.checked);
+      w.appendChild(cb); w.appendChild(document.createTextNode("Mute basemap colours"));
+      b.appendChild(w);
+      const cu = div("bm-custom field");
+      cu.style.display = map.basemap() === "custom" ? "" : "none";
+      const ci = document.createElement("input");
+      ci.type = "text"; ci.placeholder = "https://…/{z}/{x}/{y}.png";
+      ci.value = map.customUrl || "";
+      ci.onchange = () => {
+        map.customUrl = ci.value.trim();
+        if (map.customUrl) {
+          $(".bm-status").textContent = "Loading custom tiles…";
+          map.setBasemap("custom");
+        }
+      };
+      cu.appendChild(ci);
+      b.appendChild(cu);
+      b.appendChild(div("bm-status hint"));
+      b.appendChild(txt(div("hint"),
+        "OpenFreeMap needs an internet connection and does not work inside the claude.ai " +
+        "preview, which blocks outside requests. Open the downloaded file, or host it, to use it."));
+    }));
+
+    host.appendChild(group("Score weights", false, b => {
+      [["network", "Network load"], ["buildability", "Buildability"], ["cost", "Capital cost"],
+       ["readiness", "Readiness & legal"], ["scalability", "Expansion room"]].forEach(w => {
+        b.appendChild(rangeField(w[1], C.weights[w[0]], 0, 50, 5, v => String(v),
+          v => { C.weights[w[0]] = v; recompute(); }));
+      });
+      b.appendChild(txt(div("hint"),
+        "Weights shape the comparison score only. Fit and feasibility are hard tests, not weighted."));
+    }));
+  }
+
+  const cand = () => C.candidates.find(k => k.id === selId) || C.candidates[0];
+
+  function addCandidate() {
+    const base = cand();
+    const id = "C" + (C.candidates.length + 1) + Math.floor(Math.random() * 90 + 10);
+    C.candidates.push({ id: id, n: "New candidate", lat: base ? base.lat + 0.03 : -6.3,
+      lng: base ? base.lng + 0.03 : 107.0, landSqm: 60000, acquireSqm: 60000,
+      pricePerSqm: 1.5e6, roadWidthM: 12, tollKm: 3, tollMin: 10, sitePrepPct: 3,
+      legal: "To verify", legalScore: 3, readiness: 3, flags: [] });
+    selId = id; buildControls(); recompute();
+  }
+  function removeCandidate() {
+    if (C.candidates.length <= 1) { flash("Keep at least one candidate", true); return; }
+    C.candidates = C.candidates.filter(k => k.id !== selId);
+    selId = C.candidates[0].id; buildControls(); recompute();
+  }
+
+  function importCase() {
+    const i = document.createElement("input");
+    i.type = "file"; i.accept = ".json,application/json";
+    i.onchange = () => {
+      const f = i.files && i.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = () => {
+        try {
+          const j = JSON.parse(String(r.result));
+          if (!j.candidates || !j.flows) throw new Error("missing candidates or flows");
+          C = j; selId = C.candidates[0].id;
+          $("#caseName").textContent = C.meta ? C.meta.case : "Imported case";
+          buildControls(); recompute(); flash("Case loaded");
+        } catch (e) { flash("Could not read that case: " + e.message, true); }
+      };
+      r.readAsText(f);
+    };
+    i.click();
+  }
+  function exportCase() {
+    const blob = new Blob([JSON.stringify(C, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = (C.meta.case || "case").replace(/[^a-z0-9]+/gi, "-").toLowerCase() + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  /* ---------- compute ---------- */
+  function archFor() { return archMode === "fixed" ? archFixed : null; }
+  function recompute() {
+    E.calibrate(C);
+    const forced = archFor();
+    if (forced) {
+      results = E.scoreAll(C, forced);
+      results.forEach(r => { r.pick = { key: forced, arch: C.archetypes[forced] }; });
+    } else {
+      results = C.candidates.map(k => {
+        const ba = E.bestArchetype(C, k);
+        return { ba: ba, key: ba.best.key };
+      });
+      const keyByCand = {};
+      C.candidates.forEach((k, i) => { keyByCand[k.id] = results[i].key; });
+      const scored = {};
+      Object.keys(C.archetypes).forEach(a => { scored[a] = E.scoreAll(C, a); });
+      results = C.candidates.map((k, i) => {
+        const a = keyByCand[k.id];
+        const r = scored[a].find(x => x.cand.id === k.id);
+        r.pick = { key: a, arch: C.archetypes[a] };
+        r.archAll = E.bestArchetype(C, k).all;
+        return r;
+      });
+    }
+    if (!results.find(r => r.cand.id === selId)) selId = C.candidates[0].id;
+    paint();
+  }
+  const current = () => results.find(r => r.cand.id === selId) || results[0];
+
+  /* ---------- map ---------- */
+  function paintMap() {
+    const r = current(); if (!r) return;
+    const sites = C.candidates.map(k => ({
+      id: k.id, lat: k.lat, lng: k.lng, label: k.id, active: k.id === selId }));
+    if (C.baseline) sites.push({ id: "__base", lat: C.baseline.lat, lng: C.baseline.lng,
+      label: "existing", baseline: true });
+    const flows = [];
+    const maxLoad = Math.max(...r.load.rows.map(x => x.load));
+    r.load.rows.forEach(x => {
+      const key = x.flow.to || x.flow.from;
+      const g = C.groups[key]; if (!g) return;
+      const mem = g.members.map(m => C.anchors[m]);
+      const lat = mem.reduce((a, m) => a + m.lat, 0) / mem.length;
+      const lng = mem.reduce((a, m) => a + m.lng, 0) / mem.length;
+      flows.push({ from: { lat: r.cand.lat, lng: r.cand.lng }, to: { lat: lat, lng: lng },
+        w: Math.max(1.2, 13 * x.load / maxLoad), heavy: x.load / maxLoad > 0.4,
+        label: g.n.split(",")[0].split(" (")[0] + " · " + n0(x.load / 1000) + "k" });
+    });
+    map.data = { sites: sites, flows: flows };
+    map.render();
+    $("#legend").innerHTML =
+      "<div><b>" + r.cand.id + "</b> selected · click a marker to switch</div>" +
+      "<div>Spoke thickness = tonnage × travel minutes</div>" +
+      "<div>Total load " + n0(r.load.total) + " ton-min/day</div>" +
+      (C.baseline ? "<div>Existing site ◆ " + n0(E.networkLoad(C, C.baseline).total) + "</div>" : "");
+  }
+  function paintMassing() {
+    const r = current(); if (!r) return;
+    const host = $("#massWrap"); host.innerHTML = "";
+    window.MASSING.draw(host, {
+      layout: r.layout, buildingSqm: r.size.buildingSqm, docks: r.size.docks,
+      apronDepthM: C.programme.apronDepthM, holdingSqm: r.size.holdingSqm,
+      clearHeightM: C.programme.clearHeightM, fits: r.fits, headroom: r.headroom
+    });
+    const c = div("card"); const h = document.createElement("h3");
+    h.textContent = "Layout test"; c.appendChild(h);
+    const bd = div("cbody");
+    bd.appendChild(table(["", ""], [
+      [{ t: "Parcel", c: "l" }, { t: n0(r.layout.parcelW) + " × " + n0(r.layout.parcelD) + " m", c: "r" }],
+      [{ t: "Building", c: "l" }, { t: n0(r.layout.buildW) + " × " + n0(r.layout.buildD) + " m", c: "r" }],
+      [{ t: "Depth required", c: "l" },
+       { t: n0(r.layout.needD) + " m vs " + n0(r.layout.usableD) + " m available", c: "r" }],
+      [{ t: "Dock face needed per side", c: "l" }, { t: n0(r.layout.dockFacePerSide) + " m", c: "r" }],
+      [{ t: "Apron (two sides)", c: "l" }, { t: n0(r.size.apronSqm) + " m²", c: "r" }],
+      [{ t: "Truck holding", c: "l" }, { t: n0(r.size.holdingSqm) + " m²", c: "r" }],
+      [{ t: "Total site needed", c: "l" }, { t: n0(r.size.siteSqm) + " m²", c: "r" }]
+    ]));
+    bd.appendChild(txt(div("note"),
+      "Building takes the usable frontage, depth follows from area, then an apron on both " +
+      "dock faces plus truck holding. A wider parcel needs less depth."));
+    c.appendChild(bd); host.appendChild(c);
+  }
+  function paint() {
+    if (view === "map") paintMap(); else paintMassing();
+    renderResult(); renderCompare();
+  }
+
+  /* ---------- result pane ---------- */
+  function card(title) {
+    const el = div("card");
+    if (title) { const h = document.createElement("h3"); h.textContent = title; el.appendChild(h); }
+    const body = div("cbody"); el.appendChild(body);
+    return { el: el, body: body };
+  }
+  function table(head, rows) {
+    const t = document.createElement("table"); t.className = "t";
+    if (head && head.some(h => h)) {
+      const tr = document.createElement("tr");
+      head.forEach((h, i) => {
+        const th = document.createElement("th"); th.textContent = h;
+        if (i) th.className = "r"; tr.appendChild(th);
+      });
+      t.appendChild(tr);
+    }
+    rows.forEach(r => {
+      const tr = document.createElement("tr");
+      if (r.cls) tr.className = r.cls;
+      if (r.onclick) { tr.onclick = r.onclick; tr.classList.add("clickable"); }
+      (r.cells || r).forEach(c => {
+        const td = document.createElement("td");
+        if (typeof c === "string") td.textContent = c;
+        else { td.textContent = c.t; if (c.c) td.className = c.c; }
+        tr.appendChild(td);
+      });
+      t.appendChild(tr);
+    });
+    return t;
+  }
+  function kpi(k, v, n, cls) {
+    const e = div("kpi");
+    e.appendChild(txt(div("k"), k));
+    e.appendChild(txt(div("v" + (cls ? " " + cls : "")), v));
+    e.appendChild(txt(div("n"), n || ""));
+    return e;
+  }
+  function barRow(label, value, color) {
+    const b = div("bar");
+    b.appendChild(txt(div("t"), label));
+    const tr = div("track"), f = div("fill");
+    f.style.width = Math.max(0, Math.min(100, value)) + "%";
+    if (color) f.style.background = color;
+    tr.appendChild(f); b.appendChild(tr);
+    b.appendChild(txt(div("n"), n0(value)));
+    return b;
+  }
+
+  function renderResult() {
+    const pane = $("#paneResult"); pane.innerHTML = "";
+    const r = current(); if (!r) return;
+    const base = C.baseline ? E.networkLoad(C, C.baseline).total : null;
+
+    const v = div("verdict" + (r.fits ? "" : " no"));
+    const h = div("head");
+    h.appendChild(txt(div("kicker"), r.fits ? "Best-fit development" : "Does not fit this parcel"));
+    const t = document.createElement("h2");
+    t.textContent = r.pick ? r.pick.arch.n : C.archetypes[C.archetype].n;
+    h.appendChild(t);
+    h.appendChild(txt(div("sub"), r.cand.n + " · " + n0(r.plot) + " m² · Rp " +
+      n1(r.cand.pricePerSqm / 1e6) + " m/m² · " + r.cand.roadWidthM + " m road"));
+    v.appendChild(h);
+    const g = div("kpis");
+    g.appendChild(kpi("Building", n0(r.size.buildingSqm) + " m²",
+      n0(r.size.docks) + " docks · " + n0(r.size.dailyKg / 1000) + " t/day"));
+    g.appendChild(kpi("Site needed", n0(r.size.siteSqm) + " m²",
+      (r.fits ? n0(r.headroom) + " m² spare" : n0(-r.headroom) + " m² short"),
+      r.fits ? "pos" : "neg"));
+    g.appendChild(kpi("Capital cost", idr(r.capex.total),
+      idr(r.capex.total / r.size.buildingSqm) + "/m²"));
+    g.appendChild(kpi("Network load", n0(r.load.total),
+      base ? (r.load.total > base ? "+" : "") + pct((r.load.total - base) / base, 1) + " vs existing"
+           : "ton-min/day", base && r.load.total <= base ? "pos" : ""));
+    v.appendChild(g);
+    pane.appendChild(v);
+
+    const sc = card("Comparison score");
+    const bars = div("bars");
+    [["Network load", r.scores.network], ["Buildability", r.scores.buildability],
+     ["Capital cost", r.scores.cost], ["Readiness & legal", r.scores.readiness],
+     ["Expansion room", r.scores.scalability]].forEach(x => bars.appendChild(barRow(x[0], x[1])));
+    const tot = barRow("Composite", r.scores.composite); tot.classList.add("total");
+    bars.appendChild(tot);
+    sc.body.appendChild(bars);
+    sc.el.appendChild(sc.body); pane.appendChild(sc.el);
+
+    const pr = card("Programme");
+    pr.body.appendChild(table(["", ""], [
+      [{ t: "Design volume", c: "l" }, { t: n0(r.size.dailyKg) + " kg/day", c: "r" }],
+      [{ t: "Shipments", c: "l" }, { t: n0(r.size.shipments) + "/day", c: "r" }],
+      [{ t: "Peak on floor", c: "l" }, { t: n0(r.size.peakKg) + " kg", c: "r" }],
+      [{ t: "Net operating area", c: "l" }, { t: n0(r.size.netSqm) + " m²", c: "r" }],
+      [{ t: "With circulation", c: "l" }, { t: n0(r.size.opSqm) + " m²", c: "r" }],
+      [{ t: "Support area", c: "l" }, { t: n0(r.size.supportSqm) + " m²", c: "r" }],
+      { cls: "sum", cells: [{ t: "Total building", c: "l" }, { t: n0(r.size.buildingSqm) + " m²", c: "r" }] },
+      [{ t: "Docks", c: "l" }, { t: r.size.unloadDocks + " unload / " + r.size.loadDocks + " load", c: "r" }],
+      [{ t: "Dock face", c: "l" }, { t: n0(r.size.dockFaceM) + " m", c: "r" }],
+      [{ t: "Apron", c: "l" }, { t: n0(r.size.apronSqm) + " m²", c: "r" }],
+      [{ t: "Truck holding", c: "l" }, { t: n0(r.size.holdingSqm) + " m² · " + n0(r.size.queueTrucks) + " trucks", c: "r" }],
+      { cls: "sum", cells: [{ t: "Site required", c: "l" }, { t: n0(r.size.siteSqm) + " m²", c: "r" }] },
+      [{ t: "Throughput capacity", c: "l" }, { t: n0(r.size.capacityKg) + " kg/day", c: "r" }]
+    ]));
+    pane.appendChild(pr.el);
+
+    const ec = card("Feasibility");
+    const x = r.capex;
+    const rows = [
+      [{ t: "Land", c: "l" }, { t: idr(x.land), c: "r" }],
+      [{ t: "Building", c: "l" }, { t: idr(x.building + x.mech), c: "r" }],
+      [{ t: "Site prep, permits, fit-out", c: "l" }, { t: idr(x.extras), c: "r" }],
+      [{ t: "Acquisition costs", c: "l" }, { t: idr(x.acquisition), c: "r" }],
+      [{ t: "Contingency", c: "l" }, { t: idr(x.contingency), c: "r" }],
+      { cls: "sum", cells: [{ t: "Total capital", c: "l" }, { t: idr(x.total), c: "r" }] },
+      [{ t: "Distribution vs existing", c: "l" }, { t: idr(r.distSaving) + "/yr", c: "r" }],
+      [{ t: "Capacity shortfall avoided", c: "l" }, { t: idr(r.capSaving) + "/yr", c: "r" }],
+      [{ t: "Extra operating cost", c: "l" }, { t: idr(-r.opexDelta) + "/yr", c: "r" }],
+      { cls: "sum", cells: [{ t: "Net quantified benefit", c: "l" }, { t: idr(r.netY1) + "/yr", c: "r" }] },
+      { cls: "sum", cells: [{ t: "Needed to justify the capital", c: "l" },
+                            { t: idr(r.requiredBenefit) + "/yr", c: "r" }] }
+    ];
+    ec.body.appendChild(table(["", ""], rows));
+    const nt = div("note"); nt.style.marginTop = "9px";
+    if (r.maxLand) {
+      nt.innerHTML = "<strong>Maximum justifiable land price: Rp " + n0(r.maxLand) +
+        "/m².</strong> Asking price is Rp " + n0(r.cand.pricePerSqm) + "/m².";
+    } else {
+      nt.innerHTML = "Quantified benefits fall <strong>" + idr(r.benefitGap) +
+        "/yr short</strong> of justifying this capital, so no land price makes it pay on " +
+        "cost savings alone. A project of this kind is carried by capacity and service, " +
+        "not by transport savings — enter the value of those in “Other annual benefit”.";
+    }
+    ec.body.appendChild(nt);
+    pane.appendChild(ec.el);
+
+    if (r.archAll) {
+      const ac = card("Facility type");
+      ac.body.appendChild(table(["Type", "Building", "Site", "Capital"],
+        r.archAll.map(a => ({
+          cls: a.key === r.pick.key ? "on" : (a.eligible ? "" : ""),
+          cells: [{ t: a.arch.n + (a.eligible ? "" : " ·"), c: "l" },
+                  { t: n0(a.f.size.buildingSqm) + " m²", c: "r" },
+                  { t: n0(a.f.size.siteSqm) + " m²", c: "r" },
+                  { t: idr(a.f.capex.total), c: "r" }]
+        }))));
+      const ineligible = r.archAll.filter(a => !a.eligible);
+      if (ineligible.length) {
+        const n = div("note"); n.style.marginTop = "8px";
+        n.textContent = "· " + ineligible.map(a => a.arch.n + ": " + a.why).join("; ") + ".";
+        ac.body.appendChild(n);
+      }
+      pane.appendChild(ac.el);
+    }
+
+    if (r.constraints.length) {
+      const cc = card("Constraints");
+      const f = div("flags");
+      r.constraints.forEach(x => {
+        const row = div("flag " + (x.level === "stop" ? "stop" : x.level === "info" ? "info" : ""));
+        row.appendChild(txt(div("ic"), x.level === "stop" ? "!" : x.level === "info" ? "i" : "!"));
+        row.appendChild(txt(document.createElement("span"), x.t));
+        f.appendChild(row);
+      });
+      cc.body.appendChild(f); pane.appendChild(cc.el);
+    }
+  }
+
+  function renderCompare() {
+    const pane = $("#paneCompare"); pane.innerHTML = "";
+    const base = C.baseline ? E.networkLoad(C, C.baseline).total : null;
+    const ranked = results.slice().sort((a, b) => b.scores.composite - a.scores.composite);
+    const c = card("All candidates");
+    c.body.appendChild(table(["Site", "Score", "Load", "Capital", "Fit"],
+      ranked.map(r => ({
+        cls: r.cand.id === selId ? "on clickable" : "clickable",
+        onclick: () => { selId = r.cand.id; buildControls(); paint(); },
+        cells: [{ t: r.cand.id + " " + r.cand.n.replace(/^K\d+ – /, ""), c: "l" },
+                { t: n0(r.scores.composite), c: "r" },
+                { t: n0(r.load.total), c: "r" },
+                { t: idr(r.capex.total), c: "r" },
+                { t: r.fits ? "yes" : "no", c: "r" }]
+      }))));
+    if (base) {
+      const n = div("note"); n.style.marginTop = "9px";
+      n.textContent = "Existing site carries " + n0(base) +
+        " ton-min/day. Lower load is better — it is the study's own centre-of-gravity measure.";
+      c.body.appendChild(n);
+    }
+    pane.appendChild(c.el);
+
+    const cal = E.calibration();
+    const cv = E.crossValidate(C);
+    const q = card("Travel-time quality");
+    q.body.appendChild(table(["", ""], [
+      [{ t: "Surveyed sites used", c: "l" }, { t: String(C.refSites.length), c: "r" }],
+      [{ t: "Legs calibrated", c: "l" }, { t: String(cal.n), c: "r" }],
+      [{ t: "Leave-one-out error on total load", c: "l" }, { t: cv.loadMape.toFixed(1) + "%", c: "r" }],
+      [{ t: "Median leg error", c: "l" }, { t: n0(cv.mae) + " min", c: "r" }]
+    ]));
+    q.body.appendChild(txt(div("note"),
+      "Each surveyed site was re-predicted from the other four. Candidates far from any " +
+      "surveyed site carry more uncertainty than this average."));
+    pane.appendChild(q.el);
+  }
+
+  function renderMethod() {
+    const m = $("#paneMethod");
+    m.innerHTML =
+      "<p>The app answers one question for any parcel and any demand case: <strong>what should " +
+      "be built here, does it fit, and what would it have to be worth?</strong></p>" +
+      "<h3>1 · Sizing</h3><p>Peak volume sets the floor area, exactly as in the source study:</p>" +
+      "<div class='eq'>net      = peak kg ÷ storage density\n" +
+      "operating = net × (1 + circulation %)\n" +
+      "building  = operating ÷ (1 − support %)</div>" +
+      "<p>With the loaded defaults this returns 20,860 m² at normal season and 32,889 m² at high " +
+      "season, against the study's 20,860 and 32,890.</p>" +
+      "<h3>2 · Docks, apron and yard</h3>" +
+      "<div class='eq'>docks   = trucks/day × dwell ÷ (hours × 60 × utilisation)\n" +
+      "apron   = docks × pitch × apron depth\n" +
+      "holding = queued trucks × slot area × factor</div>" +
+      "<p>The defaults return 52 loading docks — the same number as the study's future plan — and " +
+      "about 2,800 m² of truck holding against its observed 2,900 m².</p>" +
+      "<h3>3 · Does it fit?</h3><p>Two tests, both hard. Area: building plus apron plus holding " +
+      "plus circulation against the parcel. Shape: the building takes the usable frontage, depth " +
+      "follows from area, and apron and holding are added behind it. A parcel can pass on area " +
+      "and fail on shape.</p>" +
+      "<h3>4 · Network load</h3><p>The study's centre-of-gravity method: daily tonnage × travel " +
+      "minutes, summed over every movement through the hub. Lower is better.</p>" +
+      "<div class='eq'>load = Σ (tonnes per day × minutes)</div>" +
+      "<p>Travel times are measured where the study surveyed them. Elsewhere each surveyed site's " +
+      "own measured time to the same destination is corrected for the difference in distance and " +
+      "weighted by proximity, so a candidate on a surveyed location returns its measured value. " +
+      "The Compare tab reports the leave-one-out error of that estimator.</p>" +
+      "<h3>5 · Cost</h3><p>Land and building are priced directly; every other line is a percentage " +
+      "of their subtotal. That structure reproduces all five published CAPEX simulations to the " +
+      "rupiah. Acquisition costs and contingency, which the source excluded, are added and can be " +
+      "set to zero to reconcile.</p>" +
+      "<h3>6 · What it would have to be worth</h3><p>Quantified benefits are the change in " +
+      "distribution cost against the existing site, plus the capacity the existing site cannot " +
+      "hold, less the operating cost of a larger building. Where these cover the capital, the app " +
+      "solves for the maximum justifiable land price. Where they do not, it reports the annual " +
+      "benefit that would be required — the honest form of the question for an owner-operated " +
+      "facility, whose case usually rests on capacity and service rather than transport savings.</p>" +
+      "<h3>What it does not do</h3><ul>" +
+      "<li>No vehicle routing or shift simulation — legs are origin-to-destination times.</li>" +
+      "<li>No congestion feedback and no time-of-day switching beyond the times you supply.</li>" +
+      "<li>No tax, financing structure, staged build or real-options value.</li>" +
+      "<li>The massing is indicative: one rectangular block with docks on two faces.</li>" +
+      "<li>Land prices, flood and legal status are inputs, not checked against any registry.</li></ul>" +
+      "<p class='note'>The loaded base case uses figures from the uploaded feasibility study. They " +
+      "are that study's assumptions and surveys, not verified operational data, and the candidate " +
+      "coordinates are approximate — correct them in the Candidates panel before drawing any " +
+      "conclusion from a specific site.</p>";
+  }
+
+  /* ---------- boot ---------- */
+  function selectTab(w) {
+    ["Result", "Compare", "Method"].forEach(t => {
+      $("#pane" + t).hidden = (t.toLowerCase() !== w);
+      $("#tab" + t).setAttribute("aria-selected", String(t.toLowerCase() === w));
+    });
+  }
+  function setView(v) {
+    view = v;
+    $("#viewMap").setAttribute("aria-pressed", String(v === "map"));
+    $("#viewMass").setAttribute("aria-pressed", String(v === "mass"));
+    $("#map").style.display = v === "map" ? "" : "none";
+    $(".mapctl").style.display = v === "map" ? "" : "none";
+    $("#legend").style.display = v === "map" ? "" : "none";
+    $("#massWrap").hidden = v !== "mass";
+    paint();
+  }
+  function boot() {
+    selId = C.candidates[0].id;
+    $("#caseName").textContent = C.meta.case;
+    map = window.MapView($("#map"), { onSite: id => {
+      if (id === "__base") return;
+      selId = id; buildControls(); paint();
+    } });
+    map.onBasemap = function (ok, label, why, key) {
+      const s = $(".bm-status");
+      if (!s) return;
+      if (why === "schematic") {
+        s.textContent = "Schematic view — drawn from this tool's own data, works offline.";
+      } else if (ok) {
+        s.textContent = label + " loaded.";
+      } else {
+        const note = (map.basemaps[key === "none" ? "osm" : key] || {}).note;
+        const msg = why === "library" ? "the MapLibre library could not be downloaded"
+          : why === "forbidden" ? "the tile server refused the request (403)"
+          : why === "ratelimited" ? "the tile server is rate limiting (429)"
+          : why === "tiles" ? "the tile server could not be reached"
+          : why === "timeout" ? "the tiles timed out" : "it could not start";
+        s.textContent = label + " did not load — " + msg + ". Back on the schematic view.";
+        const sel = $(".bm-select"); if (sel) sel.value = "none";
+      }
+      paint();
+    };
+    $("#zin").onclick = () => map.zoomBy(1.25);
+    $("#zout").onclick = () => map.zoomBy(1 / 1.25);
+    $("#zfit").onclick = fitMap;
+    $("#themeBtn").onclick = () => {
+      const dark = document.documentElement.getAttribute("data-theme") === "dark";
+      document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+      $("#themeBtn").textContent = dark ? "Dark" : "Light";
+      paint();
+    };
+    $("#exportBtn").onclick = exportCase;
+    $("#viewMap").onclick = () => setView("map");
+    $("#viewMass").onclick = () => setView("mass");
+    $("#tabResult").onclick = () => selectTab("result");
+    $("#tabCompare").onclick = () => selectTab("compare");
+    $("#tabMethod").onclick = () => selectTab("method");
+    buildControls(); renderMethod(); recompute(); fitMap(); selectTab("result");
+  }
+  function fitMap() {
+    const pts = C.candidates.map(k => ({ lat: k.lat, lng: k.lng }));
+    if (C.baseline) pts.push({ lat: C.baseline.lat, lng: C.baseline.lng });
+    map.fit(pts, 90); paintMap();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();
+
+</script>
+</body></html>
